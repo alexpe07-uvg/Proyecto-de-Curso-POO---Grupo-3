@@ -1,4 +1,4 @@
 // Controller for the app.
-class AppController {
+class CrearEventoModel {
   // Add your controller logic here
 }
