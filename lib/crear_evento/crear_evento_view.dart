@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
 
-class CrearEventoUVGPage extends StatefulWidget {
-  const CrearEventoUVGPage({super.key});
+class CrearEventoView extends StatefulWidget {
+  const CrearEventoView({super.key});
 
   @override
-  State<CrearEventoUVGPage> createState() => _CrearEventoUVGPageState();
+  State<CrearEventoView> createState() => _CrearEventoViewState();
 }
 
-class _CrearEventoUVGPageState extends State<CrearEventoUVGPage> {
-  // Variables para almacenar la selección
+class _CrearEventoViewState extends State<CrearEventoView> {
   DateTime? _fechaSeleccionada;
   TimeOfDay? _horaSeleccionada;
 
-  // Componente nativo para fecha
   Future<void> _abrirSelectorFecha(BuildContext context) async {
     final DateTime? fecha = await showDatePicker(
       context: context,
       initialDate: _fechaSeleccionada ?? DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime(2030),
-      helpText: 'Selecciona el día del evento',
+      lastDate: DateTime(2036),
+      helpText: 'Día del evento',
       confirmText: 'Aceptar',
       cancelText: 'Cancelar',
     );
@@ -31,12 +29,11 @@ class _CrearEventoUVGPageState extends State<CrearEventoUVGPage> {
     }
   }
 
-  // Componente nativo para hora
   Future<void> _abrirSelectorHora(BuildContext context) async {
     final TimeOfDay? hora = await showTimePicker(
       context: context,
       initialTime: _horaSeleccionada ?? TimeOfDay.now(),
-      helpText: 'Selecciona la hora del evento',
+      helpText: 'Hora del evento',
       confirmText: 'Aceptar',
       cancelText: 'Cancelar',
     );
@@ -50,9 +47,9 @@ class _CrearEventoUVGPageState extends State<CrearEventoUVGPage> {
 
   @override
   Widget build(BuildContext context) {
-    const Color verdeUVG = Color(0xFF006837);
+    // Tomamos el color primario configurado en main.dart
+    final Color colorAcento = Theme.of(context).colorScheme.primary;
 
-    // Formateo visual del texto de los botones
     final String textoFecha = _fechaSeleccionada == null
         ? 'Elegir fecha'
         : '${_fechaSeleccionada!.day.toString().padLeft(2, '0')}/${_fechaSeleccionada!.month.toString().padLeft(2, '0')}/${_fechaSeleccionada!.year}';
@@ -64,74 +61,102 @@ class _CrearEventoUVGPageState extends State<CrearEventoUVGPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'UVGMatches - Crear Evento',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          'Crear Nuevo Evento',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: verdeUVG,
         centerTitle: true,
-        elevation: 1,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Datos de la actividad',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+            Text(
+              'Información del evento',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Publica un evento para conectar con la comunidad del campus.',
-              style: TextStyle(fontSize: 13, color: Colors.black54),
+            Text(
+              'Realiza una publicación para conectar con la comunidad del campus!',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
             const SizedBox(height: 20),
 
             // Nombre del evento
-            const TextField(
+            TextField(
               decoration: InputDecoration(
                 labelText: 'Nombre del evento',
-                hintText: 'Ej. Torneo Relámpago Smash / Tarde de estudio',
-                prefixIcon: Icon(Icons.campaign_outlined, color: verdeUVG),
-                border: OutlineInputBorder(),
+                hintText: 'Ej. Torneo Relámpago Smash / Chamusca fútbol / etc.',
+                prefixIcon: Icon(Icons.campaign_outlined, color: colorAcento),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
 
             // Ubicación en campus
-            const TextField(
+            TextField(
               decoration: InputDecoration(
-                labelText: 'Lugar en campus',
-                hintText: 'Ej. Edificio CIT - Nivel 3, Plaza Paiz, Cafetería',
-                prefixIcon: Icon(Icons.place_outlined, color: verdeUVG),
-                border: OutlineInputBorder(),
+                labelText: 'Punto de encuentro',
+                hintText: 'Ej. CIT - 313 / Plaza Paiz / Canchas UVG / etc.',
+                prefixIcon: Icon(Icons.place_outlined, color: colorAcento),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
 
             // Categoría
             DropdownButtonFormField<String>(
-              value: 'Deportes',
-              decoration: const InputDecoration(
+              initialValue: 'Deportes',
+              decoration: InputDecoration(
                 labelText: 'Categoría',
-                prefixIcon: Icon(Icons.category_outlined, color: verdeUVG),
-                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.category_outlined, color: colorAcento),
+                border: const OutlineInputBorder(),
               ),
               items: const [
-                DropdownMenuItem(value: 'Deportes', child: Text('Deportes y Actividad Física')),
-                DropdownMenuItem(value: 'Estudio', child: Text('Grupo de Estudio / Académico')),
-                DropdownMenuItem(value: 'Gaming', child: Text('Gaming / Juegos de mesa')),
-                DropdownMenuItem(value: 'Social', child: Text('Social / Convivio')),
+                DropdownMenuItem(
+                  value: 'Deportes',
+                  child: Text('Deportes y Actividad Física'),
+                ),
+                DropdownMenuItem(
+                  value: 'Gaming',
+                  child: Text('Gaming / Juegos de mesa'),
+                ),
               ],
               onChanged: (val) {},
             ),
             const SizedBox(height: 16),
 
-            // Selectores nativos de Fecha y Hora
+            // Dificultad
+            DropdownButtonFormField<String>(
+              initialValue: 'Casual',
+              decoration: InputDecoration(
+                labelText: 'Nivel de Dificultad',
+                prefixIcon: Icon(Icons.speed, color: colorAcento),
+                border: const OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'Casual',
+                  child: Text('Casual / Para todos los niveles'),
+                ),
+                DropdownMenuItem(
+                  value: 'Intermedio',
+                  child: Text('Intermedio / Con algo de experiencia'),
+                ),
+                DropdownMenuItem(
+                  value: 'Avanzado',
+                  child: Text('Avanzado / Para usuarios experimentados'),
+                ),
+              ],
+              onChanged: (val) {},
+            ),
+            const SizedBox(height: 16),
+
+            // Selectores de Fecha y Hora
             Row(
               children: [
                 Expanded(
@@ -139,21 +164,23 @@ class _CrearEventoUVGPageState extends State<CrearEventoUVGPage> {
                     onPressed: () => _abrirSelectorFecha(context),
                     icon: Icon(
                       Icons.calendar_today,
-                      color: _fechaSeleccionada != null ? verdeUVG : Colors.grey[700],
+                      color: _fechaSeleccionada != null ? colorAcento : null,
                       size: 18,
                     ),
                     label: Text(
                       textoFecha,
                       style: TextStyle(
-                        color: _fechaSeleccionada != null ? verdeUVG : Colors.black87,
-                        fontWeight: _fechaSeleccionada != null ? FontWeight.w600 : FontWeight.normal,
+                        color: _fechaSeleccionada != null ? colorAcento : null,
+                        fontWeight: _fechaSeleccionada != null
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(
-                        color: _fechaSeleccionada != null ? verdeUVG : Colors.grey[400]!,
-                      ),
+                      side: _fechaSeleccionada != null
+                          ? BorderSide(color: colorAcento)
+                          : null,
                     ),
                   ),
                 ),
@@ -163,21 +190,23 @@ class _CrearEventoUVGPageState extends State<CrearEventoUVGPage> {
                     onPressed: () => _abrirSelectorHora(context),
                     icon: Icon(
                       Icons.access_time,
-                      color: _horaSeleccionada != null ? verdeUVG : Colors.grey[700],
+                      color: _horaSeleccionada != null ? colorAcento : null,
                       size: 18,
                     ),
                     label: Text(
                       textoHora,
                       style: TextStyle(
-                        color: _horaSeleccionada != null ? verdeUVG : Colors.black87,
-                        fontWeight: _horaSeleccionada != null ? FontWeight.w600 : FontWeight.normal,
+                        color: _horaSeleccionada != null ? colorAcento : null,
+                        fontWeight: _horaSeleccionada != null
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(
-                        color: _horaSeleccionada != null ? verdeUVG : Colors.grey[400]!,
-                      ),
+                      side: _horaSeleccionada != null
+                          ? BorderSide(color: colorAcento)
+                          : null,
                     ),
                   ),
                 ),
@@ -186,42 +215,53 @@ class _CrearEventoUVGPageState extends State<CrearEventoUVGPage> {
             const SizedBox(height: 16),
 
             // Capacidad
-            const TextField(
+            TextField(
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'Cupo máximo de personas',
                 hintText: 'Ej. 6',
-                prefixIcon: Icon(Icons.group_outlined, color: verdeUVG),
-                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.group_outlined, color: colorAcento),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
 
             // Descripción
-            const TextField(
+             TextField(
               maxLines: 4,
+              textAlignVertical: TextAlignVertical.top, // Asegura que el texto que escribas empiece arriba
               decoration: InputDecoration(
-                labelText: 'Descripción o detalles',
+                labelText: 'Descripción o detalles adicionales a tomar en cuenta',
                 hintText: 'Cuéntales de qué trata, qué deben llevar o a quién va dirigido...',
-                alignLabelWithHint: true,
-                border: OutlineInputBorder(),
+                alignLabelWithHint: true, // Mantiene el label arriba
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 48,
+                  minHeight: 0,
+                ),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.only(bottom: 56), // Empuja el icono hacia la parte superior
+                  child: Icon(Icons.info_outline, color: colorAcento),
+                ),
+                border: const OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 24),
 
-            // Botón publicar (maqueta)
+            // Botón publicar
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton.icon(
                 onPressed: () {},
-                icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+                icon: const Icon(Icons.add_circle_outline),
                 label: const Text(
-                  'Publicar en UVGMatches',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  'Publicar',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: verdeUVG,
+                  backgroundColor: colorAcento,
+                  foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -236,10 +276,7 @@ class _CrearEventoUVGPageState extends State<CrearEventoUVGPage> {
               height: 48,
               child: TextButton(
                 onPressed: () {},
-                child: const Text(
-                  'Cancelar',
-                  style: TextStyle(color: Colors.black54, fontSize: 15),
-                ),
+                child: const Text('Cancelar', style: TextStyle(fontSize: 15)),
               ),
             ),
           ],
