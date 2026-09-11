@@ -79,7 +79,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.dark,
 
 
-      // home: const CrearEventoView(), - pantalla Mario
+      // home: const CrearEventoView(), //- pantalla Mario
     );
   }
 }
