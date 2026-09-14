@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
 
       themeMode: ThemeMode.dark,
 
-      home: const CrearLogInView(),
+      //home: const CrearLogInView(),
     );
   }
 }
