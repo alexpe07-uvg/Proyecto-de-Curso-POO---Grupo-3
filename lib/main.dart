@@ -27,6 +27,7 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
+
         scaffoldBackgroundColor: negroFondo,
         colorScheme: const ColorScheme.dark(
           primary: verdeBrillante,
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
           surface: negroSuperficie,
           onSurface: Colors.white,
         ),
+
         appBarTheme: const AppBarTheme(
           backgroundColor: negroSuperficie,
           foregroundColor: Colors.white,
