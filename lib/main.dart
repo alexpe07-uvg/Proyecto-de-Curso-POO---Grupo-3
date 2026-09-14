@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'ver_perfil/ver_perfil_view.dart';
+import 'crear_log_in/crear_log_in_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -8,14 +8,9 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  static const Color verdeBrillante =
-      Color.fromARGB(255, 7, 204, 37);
-
-  static const Color negroFondo =
-      Color(0xFF0E0E0E);
-
-  static const Color negroSuperficie =
-      Color(0xFF181818);
+  static const Color verdeBrillante = Color.fromARGB(255, 7, 204, 37);
+  static const Color negroFondo = Color(0xFF0E0E0E);
+  static const Color negroSuperficie = Color(0xFF181818);
 
   @override
   Widget build(BuildContext context) {
@@ -23,12 +18,17 @@ class MyApp extends StatelessWidget {
       title: 'UVG Matches',
       debugShowCheckedModeBanner: false,
 
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        colorSchemeSeed: verdeBrillante,
+      ),
+
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
 
         scaffoldBackgroundColor: negroFondo,
-
         colorScheme: const ColorScheme.dark(
           primary: verdeBrillante,
           onPrimary: Colors.black,
@@ -39,23 +39,47 @@ class MyApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(
           backgroundColor: negroSuperficie,
           foregroundColor: Colors.white,
+          elevation: 0,
+          shape: Border(
+            bottom: BorderSide(
+              color: Color(0xFF222222),
+              width: 1,
+            ),
+          ),
         ),
-
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: negroSuperficie,
+          labelStyle: const TextStyle(color: Colors.white70),
+          prefixIconColor: verdeBrillante,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFF2E2E2E)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: verdeBrillante, width: 1.8),
+          ),
+        ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: verdeBrillante,
             foregroundColor: Colors.black,
+            elevation: 2,
+            textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         ),
       ),
 
       themeMode: ThemeMode.dark,
 
-      home: const VerPerfilView(),
+      home: const CrearLogInView(),
     );
   }
 }
-
 // import 'package:flutter/material.dart';
 // import 'crear_evento/crear_evento_view.dart';
 
@@ -137,7 +161,7 @@ class MyApp extends StatelessWidget {
 //       themeMode: ThemeMode.dark,
 
 
-//        home: const CrearEventoView(),// - pantalla Mario
+//       // home: const CrearEventoView(), - pantalla Mario
 //     );
 //   }
 // }
