@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'crear_evento/crear_evento_view.dart';
+//import 'crear_evento/crear_evento_view.dart';
+import 'feed_principal/screens/feed_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -78,6 +79,10 @@ class MyApp extends StatelessWidget {
 
       themeMode: ThemeMode.dark,
 
+      home: const FeedScreen(),
+      routes: {
+      '/feed': (context) => const FeedScreen(),
+      },
 
       // home: const CrearEventoView(), //- pantalla Mario
     );
