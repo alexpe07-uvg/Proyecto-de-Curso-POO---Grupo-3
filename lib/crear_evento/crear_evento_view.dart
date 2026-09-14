@@ -17,7 +17,7 @@ class _CrearEventoViewState extends State<CrearEventoView> {
   final TextEditingController _cupoCtrl = TextEditingController();
   final TextEditingController _descripcionCtrl = TextEditingController();
 
-  String _categoria = 'Deportes';
+  String _categoria = 'Deportes y Actividad Física';
   String _dificultad = 'Casual';
   DateTime? _fechaSeleccionada;
   TimeOfDay? _horaSeleccionada;
@@ -188,11 +188,11 @@ class _CrearEventoViewState extends State<CrearEventoView> {
                   ),
                   items: const [
                     DropdownMenuItem(
-                      value: 'Deportes',
+                      value: 'Deportes y Actividad Física',
                       child: Text('Deportes y Actividad Física'),
                     ),
                     DropdownMenuItem(
-                      value: 'Gaming',
+                      value: 'Gaming / Juegos de mesa',
                       child: Text('Gaming / Juegos de mesa'),
                     ),
                   ],
@@ -353,7 +353,7 @@ class _CrearEventoViewState extends State<CrearEventoView> {
                 ),
                 const SizedBox(height: 12),
 
-                // Botón Cancelar delegado al Controller
+                // Botón Cancelar
                 SizedBox(
                   width: double.infinity,
                   height: 48,
