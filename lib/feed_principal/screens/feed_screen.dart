@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../ver_perfil/ver_perfil_view.dart';
+import '../../crear_evento/crear_evento_view.dart';
 import '../data/mock_data.dart';
 import '../models/item_feed.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/feed_card.dart';
+
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
 
@@ -14,9 +17,9 @@ class _FeedScreenState extends State<FeedScreen> {
   String _categoriaSeleccionada = 'Todos';
 
   final List<String> categorias = [
-  'Todos',
-  'Deportes y Actividad Física',
-  'Gaming / Juegos de mesa',
+    'Todos',
+    'Deportes y Actividad Física',
+    'Gaming / Juegos de mesa',
   ];
 
   @override
@@ -30,6 +33,21 @@ class _FeedScreenState extends State<FeedScreen> {
         title: const Text('Feed Principal de Publicaciones'),
         centerTitle: true,
         elevation: 1,
+
+        // ===== BOTÓN DE PERFIL AGREGADO =====
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const VerPerfilView()),
+              );
+            },
+          ),
+        ],
+        // ===================================
+
       ),
       body: Column(
         children: [
@@ -58,18 +76,24 @@ class _FeedScreenState extends State<FeedScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-      backgroundColor: Theme.of(context).primaryColor,
-      child: const Icon(Icons.add, color: Colors.black),
-      onPressed: () async {
-      // Navega hacia la pantalla de Crear Evento
-      final nuevoEvento = await Navigator.pushNamed(context, '/crear_evento');
-    
-    // Si la pantalla retorna un nuevo evento, lo insertamos en la lista
-      if (nuevoEvento != null && nuevoEvento is ItemFeed) {
-      setState(() {
-        mockItemsFeed.insert(0, nuevoEvento);
+        backgroundColor: Theme.of(context).primaryColor,
+        child: const Icon(Icons.add, color: Colors.black),
+        onPressed: () async {
+
+          // ===== NAVEGACIÓN DIRECTA =====
+          final nuevoEvento = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CrearEventoView()),
+          );
+          
+          // Si la pantalla retorna un nuevo evento, lo insertamos en la lista
+          if (nuevoEvento != null && nuevoEvento is ItemFeed) {
+            setState(() {
+              mockItemsFeed.insert(0, nuevoEvento);
             });
           }
+          // =========================================
+
         },
       ),
     );

@@ -27,7 +27,6 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-
         scaffoldBackgroundColor: negroFondo,
         colorScheme: const ColorScheme.dark(
           primary: verdeBrillante,
@@ -35,7 +34,6 @@ class MyApp extends StatelessWidget {
           surface: negroSuperficie,
           onSurface: Colors.white,
         ),
-
         appBarTheme: const AppBarTheme(
           backgroundColor: negroSuperficie,
           foregroundColor: Colors.white,
@@ -76,10 +74,15 @@ class MyApp extends StatelessWidget {
 
       themeMode: ThemeMode.dark,
 
+<<<<<<< HEAD
       //home: const CrearLogInView(),
 
       // home: const CrearEventoView(), //- pantalla Mario
       
+=======
+      // Inicia directamente en la vista de Login
+      home: const CrearLogInView(),
+>>>>>>> 43f3df3021292ea0d15bc09519814c360781fcf8
     );
   }
 }

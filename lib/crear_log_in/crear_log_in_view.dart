@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'crear_log_in_controller.dart';
+import '../feed_principal/screens/feed_screen.dart';
 
 class CrearLogInView extends StatefulWidget {
   const CrearLogInView({super.key});
@@ -61,7 +62,6 @@ class _CrearLogInViewState extends State<CrearLogInView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Escudo oficial de la Universidad del Valle de Guatemala reescalado
               Image.network(
                 'https://www.uvg.edu.gt/wp-content/uploads/UVG-logo-2022.png',
                 height: 110,
@@ -186,8 +186,8 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                             ),
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                final msg = isLoginMode ? '¡Inicio de sesión simulado!' : '¡Registro completado!';
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const FeedScreen()),
+                      );
                               }
                             },
                             child: Text(

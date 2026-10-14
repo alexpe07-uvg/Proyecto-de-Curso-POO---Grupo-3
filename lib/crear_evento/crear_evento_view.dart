@@ -130,6 +130,12 @@ class _CrearEventoViewState extends State<CrearEventoView> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: Center(
         child: ConstrainedBox(
