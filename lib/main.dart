@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'UVG Matches',
+      title: 'UVG Matches PROYECTO-POO-3',
       debugShowCheckedModeBanner: false,
 
       theme: ThemeData(

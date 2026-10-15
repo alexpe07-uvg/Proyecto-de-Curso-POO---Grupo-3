@@ -26,7 +26,7 @@ Map<String, dynamic> toMap() {
       'ubicacion': puntoEncuentro,
       'categoria': categoria,
       'dificultad': dificultad,
-      'fechaHora': fechaHora.toIso8601String(), // Formato estándar universal
+      'fechaHora': fechaHora.toUtc().toIso8601String(),
       'cupoMaximo': cupoMaximo,
       'descripcion': descripcion,
     };

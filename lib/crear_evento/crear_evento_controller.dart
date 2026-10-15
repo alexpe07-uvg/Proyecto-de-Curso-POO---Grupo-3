@@ -1,63 +1,93 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../crear_log_in/crear_log_in_controller.dart';
 import 'crear_evento_model.dart';
 
 class CrearEventoController extends ChangeNotifier {
   bool _cargando = false;
+  bool _cerrado = false;
+
   bool get cargando => _cargando;
 
-  // Método exclusivo para descartar pantalla (botón Cancelar)
   void cancelar(BuildContext context) {
     Navigator.pop(context);
   }
 
-  // Método para publicar y enviar el evento al Feed
-  Future<void> publicarEvento(BuildContext context, CrearEventoModel nuevoEvento) async {
-    _cargando = true;
-    notifyListeners();
+  void _actualizarCarga(bool valor) {
+    _cargando = valor;
+    if (!_cerrado) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _cerrado = true;
+    super.dispose();
+  }
+
+  Future<void> publicarEvento(
+    BuildContext context,
+    CrearEventoModel nuevoEvento,
+  ) async {
+    if (_cargando) return;
+
+    final token = CrearLogInController.token;
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Debes iniciar sesión nuevamente.')),
+      );
+      return;
+    }
+
+    _actualizarCarga(true);
 
     try {
-      // Simula el tiempo de conexión a la base de datos
-      await Future.delayed(const Duration(seconds: 2));
-
-      _cargando = false;
-      notifyListeners();
-
-      // Validación de ciclo de vida antes de usar context
-      if (!context.mounted) return;
-
-      // 1. Mostrar mensaje de éxito
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            '¡Evento publicado con éxito!',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: const Color(0xFF1E1E1E),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: const BorderSide(color: Color(0xFF00E676), width: 1.5),
-          ),
-          duration: const Duration(seconds: 2),
-        ),
+      const baseUrl = String.fromEnvironment(
+        'API_BASE_URL',
+        defaultValue: 'http://127.0.0.1:3000',
       );
 
-      // 2. Cierra la pantalla y envía el nuevo evento al Feed principal
-      Navigator.pop(context, nuevoEvento);
+      final respuesta = await http
+          .post(
+            Uri.parse('$baseUrl/eventos'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(nuevoEvento.toMap()),
+          )
+          .timeout(const Duration(seconds: 15));
 
-    } catch (e) {
-      _cargando = false;
-      notifyListeners();
+      final datos = jsonDecode(
+        utf8.decode(respuesta.bodyBytes),
+      ) as Map<String, dynamic>;
+
+      if (respuesta.statusCode != 201) {
+        throw Exception(datos['error'] ?? 'No se pudo guardar el evento');
+      }
 
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Ocurrió un error al guardar el evento'),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
+          content: Text('¡Evento guardado con exito!'),
         ),
       );
+
+      Navigator.pop(context, true);
+    } catch (error) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
+      );
+    } finally {
+      _actualizarCarga(false);
     }
   }
 }
