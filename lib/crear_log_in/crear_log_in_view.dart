@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'crear_log_in_controller.dart';
 import '../feed_principal/screens/feed_screen.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class CrearLogInView extends StatefulWidget {
   const CrearLogInView({super.key});
@@ -13,7 +16,85 @@ class _CrearLogInViewState extends State<CrearLogInView> {
   final CrearLogInController _controller = CrearLogInController();
   final _formKey = GlobalKey<FormState>();
 
-  bool isLoginMode = true; 
+  bool isLoginMode = true;
+
+  bool _cargando = false;
+
+  Future<void> _iniciarSesion() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _cargando = true);
+
+    try {
+      await _controller.login();
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FeedScreen()),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _cargando = false);
+      }
+    }
+  }
+
+  Future<void> _registrarCuenta() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_controller.model.alias.trim().isEmpty ||
+        _controller.model.carrera.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Completa tu nombre o alias y carrera.')),
+      );
+      return;
+    }
+
+    setState(() => _cargando = true);
+
+    try {
+      await _controller.registrar();
+
+      if (!mounted) return;
+
+      setState(() => isLoginMode = true);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cuenta creada. Ahora inicia sesión con tus datos.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _cargando = false);
+      }
+    }
+  }
+
+  Future<void> _seleccionarFoto() async {
+    bool cambio = await _controller.cambiarFotoPerfil();
+    if (cambio) {
+      setState(() {});
+    }
+  }
 
   final List<String> carrerasUVG = [
     'Ingeniería Biomédica',
@@ -50,7 +131,7 @@ class _CrearLogInViewState extends State<CrearLogInView> {
     'Licenciatura en Arquitectura',
     'Licenciatura en Diseño de Producto e Innovación',
     'Licenciatura en Composición Musical y Producción de Audio',
-    'Licenciatura en Administración de Empresas de Hospitalidad y Turismo'
+    'Licenciatura en Administración de Empresas de Hospitalidad y Turismo',
   ];
 
   @override
@@ -67,7 +148,11 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                 height: 110,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.school, size: 80, color: Color.fromARGB(255, 7, 204, 37));
+                  return const Icon(
+                    Icons.school,
+                    size: 80,
+                    color: Color.fromARGB(255, 7, 204, 37),
+                  );
                 },
               ),
               const SizedBox(height: 16),
@@ -83,7 +168,9 @@ class _CrearLogInViewState extends State<CrearLogInView> {
               const SizedBox(height: 28),
               Card(
                 elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Form(
@@ -92,7 +179,10 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                       children: [
                         Text(
                           isLoginMode ? 'Iniciar Sesión' : 'Crear Cuenta',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 20),
 
@@ -102,7 +192,10 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                             prefixIcon: Icon(Icons.email),
                           ),
                           onChanged: (val) => _controller.model.email = val,
-                          validator: (val) => (val == null || !val.contains('@')) ? 'Correo inválido' : null,
+                          validator: (val) =>
+                              (val == null || !val.trim().toLowerCase().endsWith('@uvg.edu.gt'))
+                              ? 'Correo inválido, usa uno que termine con @uvg.edu.gt'
+                              : null,
                         ),
                         const SizedBox(height: 16),
 
@@ -113,7 +206,15 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                             prefixIcon: Icon(Icons.lock),
                           ),
                           onChanged: (val) => _controller.model.password = val,
-                          validator: (val) => (val == null || val.length < 6) ? 'Mínimo 6 caracteres' : null,
+                          validator: (val) {
+                            if (val == null || val.isEmpty) {
+                              return 'Escribe tu contraseña';
+                            }
+                            if (!isLoginMode && val.length < 8) {
+                              return 'Mínimo 8 caracteres';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
 
@@ -124,8 +225,12 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                               labelText: 'Confirmar Contraseña',
                               prefixIcon: Icon(Icons.lock_outline),
                             ),
-                            onChanged: (val) => _controller.model.confirmPassword = val,
-                            validator: (val) => (val != _controller.model.password) ? 'Las contraseñas no coinciden' : null,
+                            onChanged: (val) =>
+                                _controller.model.confirmPassword = val,
+                            validator: (val) =>
+                                (val != _controller.model.password)
+                                ? 'Las contraseñas no coinciden'
+                                : null,
                           ),
                           const SizedBox(height: 16),
 
@@ -143,36 +248,64 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                               labelText: 'Carrera',
                               prefixIcon: Icon(Icons.school),
                             ),
-                            items: carrerasUVG.map((c) => DropdownMenuItem(value: c, child: Text(c, overflow: TextOverflow.ellipsis))).toList(),
-                            onChanged: (val) => _controller.model.carrera = val ?? '',
+                            items: carrerasUVG
+                                .map(
+                                  (c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text(
+                                      c,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) =>
+                                _controller.model.carrera = val ?? '',
                           ),
                           const SizedBox(height: 20),
 
                           Stack(
                             alignment: Alignment.center,
                             children: [
-                              const CircleAvatar(
+                              CircleAvatar(
                                 radius: 40,
-                                backgroundColor: Color(0xFF2E2E2E),
-                                child: Icon(Icons.person, size: 50, color: Colors.white70),
+                                backgroundColor: const Color(0xFF2E2E2E),
+                                backgroundImage: _controller.model.rutaFotoPerfil != null
+                                    ? (kIsWeb
+                                        ? NetworkImage(_controller.model.rutaFotoPerfil!)
+                                        : FileImage(File(_controller.model.rutaFotoPerfil!))
+                                            as ImageProvider)
+                                    : null,
+                                child: _controller.model.rutaFotoPerfil == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 50,
+                                        color: Colors.white70,
+                                      )
+                                    : null,
                               ),
                               Positioned(
                                 bottom: 0,
                                 right: 0,
                                 child: CircleAvatar(
                                   radius: 16,
-                                  backgroundColor: Color.fromARGB(255, 7, 204, 37),
+                                  backgroundColor: const Color.fromARGB(
+                                    255,
+                                    7,
+                                    204,
+                                    37,
+                                  ),
                                   child: IconButton(
                                     padding: EdgeInsets.zero,
-                                    icon: const Icon(Icons.add_a_photo, size: 16, color: Colors.black),
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Selector de archivos (Simulación visual)')),
-                                      );
-                                    },
+                                    icon: const Icon(
+                                      Icons.add_a_photo,
+                                      size: 16,
+                                      color: Colors.black,
+                                    ),
+                                    onPressed: _seleccionarFoto, 
                                   ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                           const SizedBox(height: 20),
@@ -184,24 +317,38 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const FeedScreen()),
-                      );
-                              }
-                            },
+                            onPressed: _cargando
+                                ? null
+                                : () {
+                                    if (isLoginMode) {
+                                      _iniciarSesion();
+                                    } else {
+                                      _registrarCuenta();
+                                    }
+                                  },
                             child: Text(
-                              isLoginMode ? 'Iniciar Sesión' : 'Registrarme',
+                              _cargando
+                                  ? 'Conectando...'
+                                  : (isLoginMode
+                                        ? 'Iniciar Sesión'
+                                        : 'Registrarme'),
                             ),
                           ),
                         ),
                         const SizedBox(height: 12),
 
                         TextButton(
-                          onPressed: () => setState(() => isLoginMode = !isLoginMode),
+                          onPressed: _cargando
+                              ? null
+                              : () =>
+                                    setState(() => isLoginMode = !isLoginMode),
                           child: Text(
-                            isLoginMode ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión',
-                            style: const TextStyle(color: Color.fromARGB(255, 7, 204, 37)),
+                            isLoginMode
+                                ? '¿No tienes cuenta? Regístrate'
+                                : '¿Ya tienes cuenta? Inicia sesión',
+                            style: const TextStyle(
+                              color: Color.fromARGB(255, 7, 204, 37),
+                            ),
                           ),
                         ),
                       ],

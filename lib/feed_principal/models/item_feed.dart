@@ -22,4 +22,18 @@ class ItemFeed {
     this.fechaEvento,
     this.ubicacion,
   });
+
+  factory ItemFeed.fromJson(Map<String, dynamic> datos) {
+    return ItemFeed(
+      id: datos['id'].toString(),
+      titulo: datos['titulo'] as String,
+      descripcion: datos['descripcion'] as String,
+      categoria: datos['categoria'] as String,
+      tipo: datos['tipo'] == 'evento' ? TipoItem.evento : TipoItem.publicacion,
+      autor: datos['autor'] as String,
+      fecha: DateTime.parse(datos['fecha'] as String).toLocal(),
+      fechaEvento: datos['fechaEvento'] as String?,
+      ubicacion: datos['ubicacion'] as String?,
+    );
+  }
 }
