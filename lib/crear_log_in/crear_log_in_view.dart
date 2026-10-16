@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-
 import 'crear_log_in_controller.dart';
 import '../feed_principal/screens/feed_screen.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class CrearLogInView extends StatefulWidget {
   const CrearLogInView({super.key});
@@ -84,6 +86,13 @@ class _CrearLogInViewState extends State<CrearLogInView> {
       if (mounted) {
         setState(() => _cargando = false);
       }
+    }
+  }
+
+  Future<void> _seleccionarFoto() async {
+    bool cambio = await _controller.cambiarFotoPerfil();
+    if (cambio) {
+      setState(() {});
     }
   }
 
@@ -184,8 +193,8 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                           ),
                           onChanged: (val) => _controller.model.email = val,
                           validator: (val) =>
-                              (val == null || !val.contains('@'))
-                              ? 'Correo inválido'
+                              (val == null || !val.trim().toLowerCase().endsWith('@uvg.edu.gt'))
+                              ? 'Correo inválido, usa uno que termine con @uvg.edu.gt'
                               : null,
                         ),
                         const SizedBox(height: 16),
@@ -258,21 +267,29 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                           Stack(
                             alignment: Alignment.center,
                             children: [
-                              const CircleAvatar(
+                              CircleAvatar(
                                 radius: 40,
-                                backgroundColor: Color(0xFF2E2E2E),
-                                child: Icon(
-                                  Icons.person,
-                                  size: 50,
-                                  color: Colors.white70,
-                                ),
+                                backgroundColor: const Color(0xFF2E2E2E),
+                                backgroundImage: _controller.model.rutaFotoPerfil != null
+                                    ? (kIsWeb
+                                        ? NetworkImage(_controller.model.rutaFotoPerfil!)
+                                        : FileImage(File(_controller.model.rutaFotoPerfil!))
+                                            as ImageProvider)
+                                    : null,
+                                child: _controller.model.rutaFotoPerfil == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 50,
+                                        color: Colors.white70,
+                                      )
+                                    : null,
                               ),
                               Positioned(
                                 bottom: 0,
                                 right: 0,
                                 child: CircleAvatar(
                                   radius: 16,
-                                  backgroundColor: Color.fromARGB(
+                                  backgroundColor: const Color.fromARGB(
                                     255,
                                     7,
                                     204,
@@ -285,16 +302,7 @@ class _CrearLogInViewState extends State<CrearLogInView> {
                                       size: 16,
                                       color: Colors.black,
                                     ),
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Selector de archivos (Simulación visual)',
-                                              ),
-                                            ),
-                                          );
-                                    },
+                                    onPressed: _seleccionarFoto, 
                                   ),
                                 ),
                               ),
