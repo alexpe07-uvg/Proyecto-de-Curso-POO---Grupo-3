@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'crear_log_in_model.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CrearLogInController {
   final CrearLogInModel model = CrearLogInModel();
+  final ImagePicker _imagePicker = ImagePicker();
 
-  // Sesión temporal en memoria: se pierde al cerrar la app.
   static String? token;
   static Map<String, dynamic>? usuario;
+  static String? fotoPerfilLocal;
 
   Future<void> login() async {
     const baseUrl = String.fromEnvironment(
@@ -63,4 +65,17 @@ class CrearLogInController {
       throw Exception(datos['error'] ?? 'No se pudo crear la cuenta');
     }
   }
+  Future<bool> cambiarFotoPerfil() async {
+    final XFile? imagen = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+    );
+
+    if (imagen != null) {
+      model.rutaFotoPerfil = imagen.path;
+      fotoPerfilLocal = imagen.path;
+      return true;
+    }
+
+    return false;
+    }
 }
