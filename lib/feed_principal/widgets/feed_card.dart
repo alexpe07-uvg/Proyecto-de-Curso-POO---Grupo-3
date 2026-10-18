@@ -9,6 +9,7 @@ class FeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final esEvento = item.tipo == TipoItem.evento;
+    final esquema = Theme.of(context).colorScheme;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -25,10 +26,10 @@ class FeedCard extends StatelessWidget {
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                      backgroundColor: esquema.primary.withValues(alpha: 0.2),
                       child: Icon(
                         esEvento ? Icons.event : Icons.article,
-                        color: Theme.of(context).primaryColor,
+                        color: esquema.primary,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -41,7 +42,7 @@ class FeedCard extends StatelessWidget {
                         ),
                         Text(
                           esEvento ? 'Evento' : 'Publicación',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          style: TextStyle(fontSize: 12, color: esquema.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -50,9 +51,9 @@ class FeedCard extends StatelessWidget {
                 Chip(
                   label: Text(
                     item.categoria,
-                    style: const TextStyle(fontSize: 11, color: Colors.white),
+                    style: TextStyle(fontSize: 11, color: esquema.onPrimary),
                   ),
-                  backgroundColor: _getColorByCategory(item.categoria),
+                  backgroundColor: esquema.primary,
                   padding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,
                 ),
@@ -66,13 +67,13 @@ class FeedCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               item.descripcion,
-              style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+              style: TextStyle(fontSize: 14, color: esquema.onSurface),
             ),
             if (esEvento) ...[
               const Divider(height: 24),
               Row(
                 children: [
-                  const Icon(Icons.access_time, size: 16, color: Colors.orange),
+                  Icon(Icons.access_time, size: 16, color: esquema.primary),
                   const SizedBox(width: 6),
                   Text(
                     item.fechaEvento ?? '',
@@ -83,11 +84,11 @@ class FeedCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.location_on, size: 16, color: Colors.redAccent),
+                  Icon(Icons.location_on, size: 16, color: esquema.primary),
                   const SizedBox(width: 6),
                   Text(
                     item.ubicacion ?? '',
-                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                    style: TextStyle(fontSize: 13, color: esquema.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -96,20 +97,5 @@ class FeedCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Color _getColorByCategory(String category) {
-    switch (category) {
-      case 'Tecnología':
-        return Colors.blue;
-      case 'Deportes':
-        return Colors.green;
-      case 'Académico':
-        return Colors.purple;
-      case 'Social':
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
   }
 }
