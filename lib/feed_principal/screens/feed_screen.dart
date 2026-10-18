@@ -230,8 +230,10 @@ class _FeedScreenState extends State<FeedScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Theme.of(context).primaryColor,
-        child: const Icon(Icons.add, color: Colors.black),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        tooltip: 'Crear evento',
+        child: const Icon(Icons.add),
         onPressed: () async {
           final guardado = await Navigator.push<bool>(
             context,

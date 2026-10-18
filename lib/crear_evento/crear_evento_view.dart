@@ -88,7 +88,19 @@ class _CrearEventoViewState extends State<CrearEventoView> {
       return;
     }
 
-    final int cupo = int.tryParse(_cupoCtrl.text.trim()) ?? 1;
+    final int? cupoParseado = int.tryParse(_cupoCtrl.text.trim());
+
+    if (cupoParseado == null || cupoParseado < 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('El cupo máximo debe ser un número mayor que cero'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    final int cupo = cupoParseado;
 
     final DateTime fechaFinal = DateTime(
       _fechaSeleccionada!.year,
@@ -108,7 +120,7 @@ class _CrearEventoViewState extends State<CrearEventoView> {
       descripcion: _descripcionCtrl.text.trim(),
     );
 
-    _controller.publicarEvento(context, nuevoEvento);
+    await _controller.publicarEvento(context, nuevoEvento);
   }
 
   @override
