@@ -352,8 +352,8 @@ async function iniciar() {
     await pool.query('SELECT 1');
     const puerto = Number(process.env.PORT || 3000);
 
-    const servidor = app.listen(puerto, '127.0.0.1', () => {
-      console.log(`API lista en http://127.0.0.1:${puerto}`);
+    const servidor = app.listen(puerto, '0.0.0.0', () => {
+      console.log(`API lista en http://0.0.0.0:${puerto}`);
       console.log('Conexión con MySQL correcta');
     });
 

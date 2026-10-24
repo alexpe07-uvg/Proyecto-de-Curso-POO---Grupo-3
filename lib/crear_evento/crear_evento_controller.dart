@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../crear_log_in/crear_log_in_controller.dart';
 import 'crear_evento_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CrearEventoController extends ChangeNotifier {
   bool _cargando = false;
@@ -43,10 +44,7 @@ class CrearEventoController extends ChangeNotifier {
     _actualizarCarga(true);
 
     try {
-      const baseUrl = String.fromEnvironment(
-        'API_BASE_URL',
-        defaultValue: 'http://127.0.0.1:3000',
-      );
+      final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
       final respuesta = await http
           .post(
@@ -54,6 +52,7 @@ class CrearEventoController extends ChangeNotifier {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $token',
+              'ngrok-skip-browser-warning': 'true',
             },
             body: jsonEncode(nuevoEvento.toMap()),
           )

@@ -5,6 +5,7 @@ import '../../crear_evento/crear_evento_view.dart';
 import '../models/item_feed.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/feed_card.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../crear_log_in/crear_log_in_controller.dart';
 
@@ -41,15 +42,12 @@ class _FeedScreenState extends State<FeedScreen> {
         throw Exception('Debes iniciar sesión nuevamente.');
       }
 
-      const baseUrl = String.fromEnvironment(
-        'API_BASE_URL',
-        defaultValue: 'http://127.0.0.1:3000',
-      );
+      final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
       final respuesta = await http
           .get(
             Uri.parse('$baseUrl/feed'),
-            headers: {'Authorization': 'Bearer $token'},
+            headers: {'Authorization': 'Bearer $token', 'ngrok-skip-browser-warning': 'true',},
           )
           .timeout(const Duration(seconds: 10));
 
@@ -100,10 +98,7 @@ class _FeedScreenState extends State<FeedScreen> {
     });
 
     try {
-      const baseUrl = String.fromEnvironment(
-        'API_BASE_URL',
-        defaultValue: 'http://127.0.0.1:3000',
-      );
+      final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
       final respuesta = await http
           .get(Uri.parse('$baseUrl/categorias'))

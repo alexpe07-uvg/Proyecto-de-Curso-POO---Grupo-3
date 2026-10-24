@@ -3,7 +3,7 @@ import 'crear_log_in_controller.dart';
 import '../feed_principal/screens/feed_screen.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+
 
 class CrearLogInView extends StatefulWidget {
   const CrearLogInView({super.key});
