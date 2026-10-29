@@ -5,6 +5,7 @@ import '../../crear_evento/crear_evento_view.dart';
 import '../models/item_feed.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/feed_card.dart';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../crear_log_in/crear_log_in_controller.dart';
@@ -47,7 +48,10 @@ class _FeedScreenState extends State<FeedScreen> {
       final respuesta = await http
           .get(
             Uri.parse('$baseUrl/feed'),
-            headers: {'Authorization': 'Bearer $token', 'ngrok-skip-browser-warning': 'true',},
+            headers: {
+              'Authorization': 'Bearer $token',
+              'ngrok-skip-browser-warning': 'true',
+            },
           )
           .timeout(const Duration(seconds: 10));
 
@@ -154,11 +158,12 @@ class _FeedScreenState extends State<FeedScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const VerPerfilView()),
               );
+              if (mounted) await _cargarFeed();
             },
           ),
         ],
