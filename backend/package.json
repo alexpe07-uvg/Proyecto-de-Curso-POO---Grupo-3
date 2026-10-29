@@ -7,9 +7,10 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test cors-local.test.js perfil.test.js",
     "start": "node server.js",
-    "test:cors": "node --test cors-local.test.js"
+    "test:cors": "node --test cors-local.test.js",
+    "test:perfil": "node --test perfil.test.js"
   },
   "keywords": [],
   "author": "",

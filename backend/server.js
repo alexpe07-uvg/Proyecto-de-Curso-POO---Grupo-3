@@ -198,6 +198,15 @@ function verificarSesion(req, res, next) {
   }
 }
 
+require('./perfil').registrarPerfil(app, pool, verificarSesion, express,
+  path.resolve(process.env.PROFILE_UPLOAD_DIR || path.join(__dirname, 'uploads', 'perfiles')));
+
+app.use((error, req, res, next) => {
+  if (error.type === 'entity.too.large') return res.status(413).json({ error: 'La imagen no puede superar 5 MB' });
+  if (error.type === 'entity.parse.failed') return res.status(400).json({ error: 'Datos inválidos' });
+  next(error);
+});
+
 app.post('/eventos', verificarSesion, async (req, res) => {
   const {
     nombre, ubicacion, categoria, dificultad,
