@@ -87,6 +87,14 @@ class _FeedScreenState extends State<FeedScreen> {
   List<String> categorias = ['Todos'];
   bool _cargandoCategorias = true;
   String? _errorCategorias;
+  bool _recargando = false;
+
+  Future<void> _recargar() async {
+    if (_recargando) return;
+    setState(() => _recargando = true);
+    await Future.wait([_cargarCategorias(), _cargarFeed()]);
+    if (mounted) setState(() => _recargando = false);
+  }
 
   @override
   void initState() {
@@ -157,6 +165,11 @@ class _FeedScreenState extends State<FeedScreen> {
         // ===== BOTÓN DE PERFIL AGREGADO =====
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Recargar',
+            onPressed: _recargando ? null : _recargar,
+          ),
+          IconButton(
             icon: const Icon(Icons.person),
             onPressed: () async {
               await Navigator.push(
@@ -198,7 +211,7 @@ class _FeedScreenState extends State<FeedScreen> {
           ),
           const Divider(height: 1),
           Expanded(
-            child: _cargandoFeed
+            child: _cargandoFeed && !_recargando
                 ? const Center(child: CircularProgressIndicator())
                 : _errorFeed != null
                 ? Center(
@@ -220,11 +233,15 @@ class _FeedScreenState extends State<FeedScreen> {
                 ? const Center(
                     child: Text('No hay publicaciones en esta categoría.'),
                   )
-                : ListView.builder(
-                    itemCount: itemsFiltrados.length,
-                    itemBuilder: (context, index) {
-                      return FeedCard(item: itemsFiltrados[index]);
-                    },
+                : RefreshIndicator(
+                    onRefresh: _recargar,
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: itemsFiltrados.length,
+                      itemBuilder: (context, index) {
+                        return FeedCard(item: itemsFiltrados[index]);
+                      },
+                    ),
                   ),
           ),
         ],

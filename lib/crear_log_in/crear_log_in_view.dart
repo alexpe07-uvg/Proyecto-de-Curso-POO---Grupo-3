@@ -64,14 +64,19 @@ class _CrearLogInViewState extends State<CrearLogInView> {
 
     try {
       await _controller.registrar();
+      final fotoGuardada = await _controller.subirFotoRegistro();
 
       if (!mounted) return;
 
       setState(() => isLoginMode = true);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cuenta creada. Ahora inicia sesión con tus datos.'),
+        SnackBar(
+          content: Text(
+            fotoGuardada
+                ? 'Cuenta creada. Ahora inicia sesión con tus datos.'
+                : 'Cuenta creada, pero no se pudo guardar la foto. Puedes subirla desde tu perfil.',
+          ),
         ),
       );
     } catch (error) {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'crear_log_in_model.dart';
 import 'package:image_picker/image_picker.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class CrearLogInController {
   final CrearLogInModel model = CrearLogInModel();
   final ImagePicker _imagePicker = ImagePicker();
+  Uint8List? _fotoBytes;
 
   static String? token;
   static Map<String, dynamic>? usuario;
@@ -66,6 +68,7 @@ class CrearLogInController {
     );
 
     if (imagen != null) {
+      _fotoBytes = await imagen.readAsBytes();
       model.rutaFotoPerfil = imagen.path;
       fotoPerfilLocal = imagen.path;
       return true;
@@ -73,4 +76,38 @@ class CrearLogInController {
 
     return false;
     }
+
+  Future<bool> subirFotoRegistro() async {
+    final bytes = _fotoBytes;
+    if (bytes == null) return true;
+    if (bytes.length > 5 * 1024 * 1024) return false;
+
+    try {
+      await login();
+
+      final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+      final respuesta = await http
+          .post(
+            Uri.parse('$baseUrl/perfil/foto'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/octet-stream',
+              'ngrok-skip-browser-warning': 'true',
+            },
+            body: bytes,
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (respuesta.statusCode != 200) return false;
+
+      _fotoBytes = null;
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      token = null;
+      usuario = null;
+    }
+  }
 }
