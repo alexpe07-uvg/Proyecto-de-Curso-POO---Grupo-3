@@ -370,9 +370,9 @@ app.get('/feed', verificarSesion, async (req, res) => {
 async function iniciar() {
   try {
     await pool.query('SELECT 1');
-    const puerto = Number(process.env.PORT || 3000);
+    const PORT = Number(process.env.PORT || 3000);
 
-    const servidor = app.listen(puerto, '0.0.0.0', () => {
+    const servidor = app.listen(PORT, '0.0.0.0', () => {
       console.log(`API lista en http://127.0.0.1:${PORT}`);
       console.log('Conexión con MySQL correcta');
     });
@@ -382,7 +382,7 @@ async function iniciar() {
       process.exit(1);
     });
   } catch (error) {
-    console.error('No se pudo conectar con MySQL:', error.code);
+    console.error('No se pudo conectar con MySQL:', error);
     await pool.end();
     process.exit(1);
   }
