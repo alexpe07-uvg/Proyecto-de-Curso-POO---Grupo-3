@@ -1,3 +1,5 @@
+import '../crear_log_in/crear_log_in_controller.dart';
+import '../crear_log_in/crear_log_in_view.dart';
 import 'package:flutter/material.dart';
 
 import 'crear_perfil_model.dart';
@@ -21,6 +23,16 @@ class _VerPerfilViewState extends State<VerPerfilView> {
     cargarDatos();
   }
 
+
+  void _cerrarSesion() {
+    CrearLogInController.token = null;
+    CrearLogInController.usuario = null;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const CrearLogInView()),
+      (route) => false,
+    );
+  }
   String mensaje(Object e) => e.toString().replaceFirst('Exception: ', '');
   Future<void> cargarDatos() async {
     setState(() {
@@ -234,6 +246,16 @@ class _VerPerfilViewState extends State<VerPerfilView> {
                           leading: const Icon(Icons.school),
                           title: const Text('Carrera'),
                           subtitle: Text(perfil.carrera),
+                        ),
+                        const SizedBox(height: 24),
+                        OutlinedButton.icon(
+                          onPressed: guardando ? null : _cerrarSesion,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red,
+                            side: const BorderSide(color: Colors.red),
+                          ),
+                          icon: const Icon(Icons.logout),
+                          label: const Text('Cerrar sesión'),
                         ),
                       ],
                     ),
