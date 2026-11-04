@@ -11,7 +11,7 @@ class AppTheme {
     );
   }
 
-  // Tema Oscuro idéntico al que tenías corriendo
+  // Tema Oscuro
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
