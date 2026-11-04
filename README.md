@@ -59,9 +59,8 @@ proyecto_poo/
 ├── backend/                         # Backend (API REST en Node.js)
 │   ├── server.js                    # Servidor principal y middlewares
 │   ├── perfil.js                    # Endpoints y lógica de perfil / uploads
+│   ├── PERFIL.md                    # Documentación del módulo de perfil
 │   ├── cors-local.js                # Control de orígenes permitidos
-│   ├── uploads/                     # Almacenamiento local de fotos de perfil
-│   │   └── perfiles/
 │   ├── .env.example                 # Variables de entorno de muestra
 │   └── package.json                 # Dependencias y scripts de Node
 ├── database.sql                     # Script de creación de tablas y datos base
