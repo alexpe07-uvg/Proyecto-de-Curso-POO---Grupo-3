@@ -1,5 +1,23 @@
 enum TipoItem { publicacion, evento }
 
+class Comentario {
+  final String id;
+  final String autor;
+  final String texto;
+  final DateTime fecha;
+  final List<Comentario> respuestas;
+
+  Comentario({required this.id, required this.autor, required this.texto, required this.fecha, List<Comentario>? respuestas}) : respuestas = respuestas ?? [];
+
+  factory Comentario.fromJson(Map<String, dynamic> datos) => Comentario(
+    id: datos['id'].toString(),
+    autor: datos['autor'] as String? ?? 'Usuario',
+    texto: datos['texto'] as String? ?? datos['contenido'] as String? ?? '',
+    fecha: DateTime.tryParse(datos['fecha'] as String? ?? '') ?? DateTime.now(),
+    respuestas: (datos['respuestas'] as List<dynamic>? ?? []).map((r) => Comentario.fromJson(r as Map<String, dynamic>)).toList(),
+  );
+}
+
 class ItemFeed {
   final String id;
   final String titulo;
@@ -10,6 +28,7 @@ class ItemFeed {
   final DateTime fecha;
   final String? fechaEvento;
   final String? ubicacion;
+  final List<Comentario> comentarios;
 
   ItemFeed({
     required this.id,
@@ -21,7 +40,8 @@ class ItemFeed {
     required this.fecha,
     this.fechaEvento,
     this.ubicacion,
-  });
+    List<Comentario>? comentarios,
+  }) : comentarios = comentarios ?? [];
 
   factory ItemFeed.fromJson(Map<String, dynamic> datos) {
     return ItemFeed(
@@ -34,6 +54,7 @@ class ItemFeed {
       fecha: DateTime.parse(datos['fecha'] as String).toLocal(),
       fechaEvento: datos['fechaEvento'] as String?,
       ubicacion: datos['ubicacion'] as String?,
+      comentarios: (datos['comentarios'] as List<dynamic>? ?? []).map((c) => Comentario.fromJson(c as Map<String, dynamic>)).toList(),
     );
   }
 }
