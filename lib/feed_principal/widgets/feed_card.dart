@@ -9,12 +9,22 @@ class FeedCard extends StatefulWidget {
 
 class _FeedCardState extends State<FeedCard> {
   late final List<Comentario> comentarios = List.from(widget.item.comentarios);
+  bool inscrito = false;
   @override Widget build(BuildContext context) {
     final item = widget.item; final evento = item.tipo == TipoItem.evento;
     return Card(margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [CircleAvatar(child: Icon(evento ? Icons.event : Icons.article)), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.autor, style: const TextStyle(fontWeight: FontWeight.bold)), Text(evento ? 'Evento' : 'Publicación')])), Chip(label: Text(item.categoria))]),
       const SizedBox(height: 12), Text(item.titulo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), const SizedBox(height: 8), Text(item.descripcion),
-      if (evento) ...[const Divider(height: 24), Text('🕒 ${item.fechaEvento ?? ''}'), Text('📍 ${item.ubicacion ?? ''}'), Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: () => _abrirComentarios(context), icon: const Icon(Icons.forum_outlined), label: Text('Comentarios (${comentarios.length})')))],
+      if (evento) ...[
+        const Divider(height: 24),
+        Text('🕒 ${item.fechaEvento ?? ''}'),
+        Text('📍 ${item.ubicacion ?? ''}'),
+        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          TextButton.icon(onPressed: () => _abrirComentarios(context), icon: const Icon(Icons.forum_outlined), label: Text('Comentarios (${comentarios.length})')),
+          const SizedBox(width: 8),
+          FilledButton.icon(onPressed: () => setState(() => inscrito = !inscrito), icon: Icon(inscrito ? Icons.check : Icons.person_add_alt_1), label: Text(inscrito ? 'Inscrito' : 'Inscribirme')),
+        ]),
+      ],
     ])));
   }
   void _abrirComentarios(BuildContext context) => showModalBottomSheet<void>(context: context, isScrollControlled: true, builder: (_) => _ComentariosSheet(comentarios: comentarios, onChanged: () => setState(() {})));
