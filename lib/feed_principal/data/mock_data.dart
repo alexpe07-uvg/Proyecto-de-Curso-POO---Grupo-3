@@ -11,6 +11,7 @@ final List<ItemFeed> mockItemsFeed = [
     fecha: DateTime.now().subtract(const Duration(hours: 3)),
     fechaEvento: '18 de Septiembre, 15:00 hrs',
     ubicacion: 'Laboratorio CIT-301',
+    cupoMaximo: 8,
   ),
   ItemFeed(
     id: '2',
@@ -31,6 +32,7 @@ final List<ItemFeed> mockItemsFeed = [
     fecha: DateTime.now().subtract(const Duration(days: 2)),
     fechaEvento: '25 de Septiembre, 09:00 hrs',
     ubicacion: 'Cancha Principal',
+    cupoMaximo: 14,
   ),
   ItemFeed(
     id: '4',
