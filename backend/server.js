@@ -349,7 +349,8 @@ app.get('/feed', verificarSesion, async (req, res) => {
         DATE_FORMAT(
           e.fecha_hora, '%Y-%m-%dT%H:%i:%sZ'
         ) AS fechaEvento,
-        e.ubicacion
+        e.ubicacion,
+        e.cupo_maximo AS cupoMaximo
       FROM publicaciones p
       JOIN categorias c ON c.id = p.categoria_id
       JOIN usuarios u ON u.id = p.usuario_id

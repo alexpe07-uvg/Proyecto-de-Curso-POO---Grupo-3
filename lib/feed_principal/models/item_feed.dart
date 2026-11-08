@@ -7,14 +7,30 @@ class Comentario {
   final DateTime fecha;
   final List<Comentario> respuestas;
 
-  Comentario({required this.id, required this.autor, required this.texto, required this.fecha, List<Comentario>? respuestas}) : respuestas = respuestas ?? [];
+  Comentario({
+    required this.id,
+    required this.autor,
+    required this.texto,
+    required this.fecha,
+    List<Comentario>? respuestas,
+  }) : respuestas = respuestas ?? [];
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'autor': autor,
+    'texto': texto,
+    'fecha': fecha.toIso8601String(),
+    'respuestas': respuestas.map((r) => r.toJson()).toList(),
+  };
 
   factory Comentario.fromJson(Map<String, dynamic> datos) => Comentario(
     id: datos['id'].toString(),
     autor: datos['autor'] as String? ?? 'Usuario',
     texto: datos['texto'] as String? ?? datos['contenido'] as String? ?? '',
     fecha: DateTime.tryParse(datos['fecha'] as String? ?? '') ?? DateTime.now(),
-    respuestas: (datos['respuestas'] as List<dynamic>? ?? []).map((r) => Comentario.fromJson(r as Map<String, dynamic>)).toList(),
+    respuestas: (datos['respuestas'] as List<dynamic>? ?? [])
+        .map((r) => Comentario.fromJson(r as Map<String, dynamic>))
+        .toList(),
   );
 }
 
@@ -28,6 +44,7 @@ class ItemFeed {
   final DateTime fecha;
   final String? fechaEvento;
   final String? ubicacion;
+  final int? cupoMaximo;
   final List<Comentario> comentarios;
 
   ItemFeed({
@@ -40,6 +57,7 @@ class ItemFeed {
     required this.fecha,
     this.fechaEvento,
     this.ubicacion,
+    this.cupoMaximo,
     List<Comentario>? comentarios,
   }) : comentarios = comentarios ?? [];
 
@@ -54,7 +72,12 @@ class ItemFeed {
       fecha: DateTime.parse(datos['fecha'] as String).toLocal(),
       fechaEvento: datos['fechaEvento'] as String?,
       ubicacion: datos['ubicacion'] as String?,
-      comentarios: (datos['comentarios'] as List<dynamic>? ?? []).map((c) => Comentario.fromJson(c as Map<String, dynamic>)).toList(),
+      cupoMaximo: datos['cupoMaximo'] != null
+          ? int.tryParse(datos['cupoMaximo'].toString())
+          : null,
+      comentarios: (datos['comentarios'] as List<dynamic>? ?? [])
+          .map((c) => Comentario.fromJson(c as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
