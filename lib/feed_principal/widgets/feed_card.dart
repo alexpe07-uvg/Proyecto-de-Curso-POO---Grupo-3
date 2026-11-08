@@ -172,5 +172,45 @@ class _ComentarioTile extends StatelessWidget {
   final ValueChanged<Comentario> onResponder;
   const _ComentarioTile({required this.comentario, required this.onResponder});
   @override
-  Widget build(BuildContext context) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(comentario.autor, style: const TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 4), Text(comentario.texto), TextButton.icon(onPressed: () async { final control = TextEditingController(); final texto = await showDialog<String>(context: context, builder: (_) => AlertDialog(title: const Text('Responder comentario'), content: TextField(controller: control, autofocus: true, decoration: const InputDecoration(hintText: 'Escribe tu respuesta')), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')), FilledButton(onPressed: () => Navigator.pop(context, control.text.trim()), child: const Text('Responder'))])); control.dispose(); if (texto != null && texto.isNotEmpty) onResponder(Comentario(id: DateTime.now().microsecondsSinceEpoch.toString(), autor: 'Tú', texto: texto, fecha: DateTime.now())); }, icon: const Icon(Icons.reply, size: 16), label: const Text('Responder')), ...comentario.respuestas.map((r) => Padding(padding: const EdgeInsets.only(left: 18, top: 8), child: Text('${r.autor}: ${r.texto}')))])));
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(comentario.autor, style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text(comentario.texto),
+            TextButton.icon(
+              onPressed: () async {
+                final control = TextEditingController();
+                final texto = await showDialog<String>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('Responder comentario'),
+                    content: TextField(controller: control, autofocus: true, decoration: const InputDecoration(hintText: 'Escribe tu respuesta')),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+                      ElevatedButton(onPressed: () => Navigator.pop(context, control.text.trim()), child: const Text('Responder')),
+                    ],
+                  ),
+                );
+                control.dispose();
+                if (texto != null && texto.isNotEmpty) {
+                  onResponder(Comentario(id: DateTime.now().microsecondsSinceEpoch.toString(), autor: 'Tú', texto: texto, fecha: DateTime.now()));
+                }
+              },
+              icon: const Icon(Icons.reply, size: 16),
+              label: const Text('Responder'),
+            ),
+            ...comentario.respuestas.map((r) => Padding(
+              padding: const EdgeInsets.only(left: 18, top: 8),
+              child: Text('${r.autor}: ${r.texto}'),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
 }
