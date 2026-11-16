@@ -45,6 +45,9 @@ class ItemFeed {
   final String? fechaEvento;
   final String? ubicacion;
   final int? cupoMaximo;
+  final int cupoOcupado;
+  final bool inscrito;
+  final List<String> inscritosNombres;
   final List<Comentario> comentarios;
 
   ItemFeed({
@@ -58,8 +61,12 @@ class ItemFeed {
     this.fechaEvento,
     this.ubicacion,
     this.cupoMaximo,
+    this.cupoOcupado = 0,
+    this.inscrito = false,
+    List<String>? inscritosNombres,
     List<Comentario>? comentarios,
-  }) : comentarios = comentarios ?? [];
+  }) : inscritosNombres = inscritosNombres ?? [],
+       comentarios = comentarios ?? [];
 
   factory ItemFeed.fromJson(Map<String, dynamic> datos) {
     return ItemFeed(
@@ -75,6 +82,13 @@ class ItemFeed {
       cupoMaximo: datos['cupoMaximo'] != null
           ? int.tryParse(datos['cupoMaximo'].toString())
           : null,
+      cupoOcupado: datos['cupoOcupado'] != null
+          ? (int.tryParse(datos['cupoOcupado'].toString()) ?? 0)
+          : 0,
+      inscrito: datos['inscrito'] == true || datos['inscrito'] == 1,
+      inscritosNombres: (datos['inscritosNombres'] as List<dynamic>? ?? [])
+          .map((n) => n.toString())
+          .toList(),
       comentarios: (datos['comentarios'] as List<dynamic>? ?? [])
           .map((c) => Comentario.fromJson(c as Map<String, dynamic>))
           .toList(),
