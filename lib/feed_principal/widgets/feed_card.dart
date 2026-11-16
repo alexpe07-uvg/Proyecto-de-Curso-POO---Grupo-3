@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../crear_log_in/crear_log_in_controller.dart';
 import '../models/item_feed.dart';
@@ -17,18 +19,38 @@ class _FeedCardState extends State<FeedCard> {
   late List<Comentario> _comentarios;
   bool _inscrito = false;
   int _cupoOcupado = 0;
+  List<String> _inscritosNombres = [];
+  bool _procesandoInscripcion = false;
   int get _cupoMaximo => widget.item.cupoMaximo ?? 10;
 
   @override
   void initState() {
     super.initState();
-    _comentarios = List<Comentario>.from(widget.item.comentarios);
+    _sincronizarDesdeItem();
     _cargarDatosPersistentes();
+  }
+
+  @override
+  void didUpdateWidget(covariant FeedCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sincronizarDesdeItem();
+  }
+
+  void _sincronizarDesdeItem() {
+    _comentarios = List<Comentario>.from(widget.item.comentarios);
+    _inscrito = widget.item.inscrito;
+    _cupoOcupado = widget.item.cupoOcupado;
+    _inscritosNombres = List<String>.from(widget.item.inscritosNombres);
   }
 
   Future<void> _cargarDatosPersistentes() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (CrearLogInController.token != null) {
+        await _guardarComentarios();
+        await prefs.setInt('feed_cupo_ocupado_${widget.item.id}', _cupoOcupado);
+        return;
+      }
 
       // 1. Cargar comentarios guardados de este item
       final comentariosGuardados =
@@ -69,6 +91,80 @@ class _FeedCardState extends State<FeedCard> {
   }
 
   Future<void> _toggleInscripcion() async {
+    if (_procesandoInscripcion) return;
+    final token = CrearLogInController.token;
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+    if (token != null && baseUrl.isNotEmpty) {
+      setState(() => _procesandoInscripcion = true);
+      try {
+        final respuesta = await http
+            .post(
+              Uri.parse('$baseUrl/eventos/${widget.item.id}/inscripcion'),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+                'ngrok-skip-browser-warning': 'true',
+              },
+            )
+            .timeout(const Duration(seconds: 10));
+
+        final datos =
+            jsonDecode(utf8.decode(respuesta.bodyBytes)) as Map<String, dynamic>;
+
+        if (respuesta.statusCode != 200) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  datos['error']?.toString() ??
+                      'No se pudo actualizar la inscripción.',
+                ),
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+          }
+          return;
+        }
+
+        _inscrito = datos['inscrito'] == true;
+        _cupoOcupado =
+            int.tryParse(datos['cupoOcupado'].toString()) ?? _cupoOcupado;
+        _inscritosNombres = (datos['inscritosNombres'] as List<dynamic>? ?? [])
+            .map((e) => e.toString())
+            .toList();
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('feed_cupo_ocupado_${widget.item.id}', _cupoOcupado);
+
+        if (mounted) {
+          setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _inscrito
+                    ? '¡Te has inscrito a ${widget.item.titulo}!'
+                    : 'Has cancelado tu inscripción.',
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No se pudo conectar con el servidor.'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _procesandoInscripcion = false);
+      }
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final usuarioKey = (CrearLogInController.usuario?['correo'] ??
             CrearLogInController.usuario?['id'] ??
@@ -123,7 +219,12 @@ class _FeedCardState extends State<FeedCard> {
       context: context,
       isScrollControlled: true,
       builder: (_) => _ComentariosSheet(
+        eventoId: widget.item.id,
         comentarios: _comentarios,
+        onActualizarLista: (lista) {
+          setState(() => _comentarios = lista);
+          _guardarComentarios();
+        },
         onAgregar: (c) {
           setState(() => _comentarios.add(c));
           _guardarComentarios();
@@ -248,6 +349,22 @@ class _FeedCardState extends State<FeedCard> {
                   ),
                 ],
               ),
+              if (_inscritosNombres.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.people_alt_outlined, size: 16, color: esquema.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Inscritos: ${_inscritosNombres.join(', ')}',
+                        style: TextStyle(fontSize: 12, color: esquema.onSurfaceVariant),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -316,12 +433,16 @@ class _FeedCardState extends State<FeedCard> {
 }
 
 class _ComentariosSheet extends StatefulWidget {
+  final String eventoId;
   final List<Comentario> comentarios;
+  final ValueChanged<List<Comentario>> onActualizarLista;
   final ValueChanged<Comentario> onAgregar;
   final VoidCallback onGuardar;
 
   const _ComentariosSheet({
+    required this.eventoId,
     required this.comentarios,
+    required this.onActualizarLista,
     required this.onAgregar,
     required this.onGuardar,
   });
@@ -332,22 +453,118 @@ class _ComentariosSheet extends StatefulWidget {
 
 class _ComentariosSheetState extends State<_ComentariosSheet> {
   final _controlador = TextEditingController();
+  late List<Comentario> _lista;
+  bool _enviando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _lista = List<Comentario>.from(widget.comentarios);
+    _cargarDesdeServidor();
+  }
+
+  Future<void> _cargarDesdeServidor() async {
+    final token = CrearLogInController.token;
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+    if (token == null || baseUrl.isEmpty) return;
+
+    try {
+      final respuesta = await http
+          .get(
+            Uri.parse('$baseUrl/eventos/${widget.eventoId}/comentarios'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'ngrok-skip-browser-warning': 'true',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (respuesta.statusCode == 200) {
+        final datos = jsonDecode(utf8.decode(respuesta.bodyBytes)) as List<dynamic>;
+        final nuevos = datos
+            .map((c) => Comentario.fromJson(c as Map<String, dynamic>))
+            .toList();
+        if (mounted) {
+          setState(() => _lista = nuevos);
+          widget.onActualizarLista(nuevos);
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _enviarComentario(String texto, {String? padreId}) async {
+    final limpio = texto.trim();
+    if (limpio.isEmpty || _enviando) return;
+
+    final token = CrearLogInController.token;
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+    if (token != null && baseUrl.isNotEmpty) {
+      setState(() => _enviando = true);
+      try {
+        final respuesta = await http
+            .post(
+              Uri.parse('$baseUrl/eventos/${widget.eventoId}/comentarios'),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+                'ngrok-skip-browser-warning': 'true',
+              },
+              body: jsonEncode({
+                'texto': limpio,
+                'padreId': ?padreId,
+              }),
+            )
+            .timeout(const Duration(seconds: 10));
+
+        if (respuesta.statusCode == 201) {
+          final datos =
+              jsonDecode(utf8.decode(respuesta.bodyBytes)) as Map<String, dynamic>;
+          final listaJson = datos['comentarios'] as List<dynamic>? ?? [];
+          final nuevos = listaJson
+              .map((c) => Comentario.fromJson(c as Map<String, dynamic>))
+              .toList();
+          if (padreId == null) _controlador.clear();
+          if (mounted) {
+            setState(() => _lista = nuevos);
+            widget.onActualizarLista(nuevos);
+          }
+          return;
+        }
+      } catch (_) {
+      } finally {
+        if (mounted) setState(() => _enviando = false);
+      }
+    }
+
+    final miNombre =
+        CrearLogInController.usuario?['nombre'] as String? ?? 'Tú';
+    final nuevo = Comentario(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      autor: miNombre,
+      texto: limpio,
+      fecha: DateTime.now(),
+    );
+
+    if (padreId == null) {
+      widget.onAgregar(nuevo);
+      _controlador.clear();
+      if (mounted) setState(() => _lista = List<Comentario>.from(widget.comentarios));
+    } else {
+      final idx = _lista.indexWhere((c) => c.id == padreId);
+      if (idx >= 0) {
+        setState(() {
+          _lista[idx].respuestas.add(nuevo);
+        });
+        widget.onActualizarLista(_lista);
+      }
+    }
+  }
 
   void _publicar() {
     final texto = _controlador.text.trim();
     if (texto.isEmpty) return;
-
-    final miNombre =
-        CrearLogInController.usuario?['nombre'] as String? ?? 'Tú';
-
-    widget.onAgregar(Comentario(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      autor: miNombre,
-      texto: texto,
-      fecha: DateTime.now(),
-    ));
-    _controlador.clear();
-    setState(() {});
+    _enviarComentario(texto);
   }
 
   @override
@@ -374,20 +591,22 @@ class _ComentariosSheetState extends State<_ComentariosSheet> {
                 ),
                 const Divider(height: 1),
                 Expanded(
-                  child: widget.comentarios.isEmpty
+                  child: _lista.isEmpty
                       ? const Center(
                           child:
                               Text('Aún no hay comentarios. ¡Sé el primero!'),
                         )
                       : ListView.builder(
                           padding: const EdgeInsets.all(12),
-                          itemCount: widget.comentarios.length,
+                          itemCount: _lista.length,
                           itemBuilder: (_, i) => _ComentarioTile(
-                            comentario: widget.comentarios[i],
-                            onResponder: (respuesta) => setState(() {
-                              widget.comentarios[i].respuestas.add(respuesta);
-                              widget.onGuardar();
-                            }),
+                            comentario: _lista[i],
+                            onResponder: (respuesta) {
+                              _enviarComentario(
+                                respuesta.texto,
+                                padreId: _lista[i].id,
+                              );
+                            },
                           ),
                         ),
                 ),
@@ -407,7 +626,7 @@ class _ComentariosSheetState extends State<_ComentariosSheet> {
                       ),
                       const SizedBox(width: 8),
                       IconButton(
-                        onPressed: _publicar,
+                        onPressed: _enviando ? null : _publicar,
                         icon: const Icon(Icons.send),
                       ),
                     ],
