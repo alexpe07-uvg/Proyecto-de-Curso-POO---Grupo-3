@@ -2,13 +2,13 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "server/server.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
     "test": "node --test cors-local.test.js perfil.test.js",
-    "start": "node server.js",
+    "start": "node server/server.js",
     "test:cors": "node --test cors-local.test.js",
     "test:perfil": "node --test perfil.test.js"
   },

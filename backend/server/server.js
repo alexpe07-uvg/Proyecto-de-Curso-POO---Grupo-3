@@ -1,11 +1,11 @@
 const path = require('node:path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const express = require('express');
 const cors = require('cors');
-const pool = require('./server/server.db');
-const { registrarAuth, verificarSesion } = require('./server/server.auth');
-const { registrarCategorias, registrarContenido } = require('./server/server.contenido');
+const pool = require('./server.db');
+const { registrarAuth, verificarSesion } = require('./server.auth');
+const { registrarCategorias, registrarContenido } = require('./server.contenido');
 
 const app = express();
 app.use(cors({
@@ -24,8 +24,8 @@ app.use(express.json({ limit: '16kb' }));
 registrarCategorias(app, pool);
 registrarAuth(app, pool);
 
-require('./perfil').registrarPerfil(app, pool, verificarSesion, express,
-  path.resolve(process.env.PROFILE_UPLOAD_DIR || path.join(__dirname, 'uploads', 'perfiles')));
+require('../perfil').registrarPerfil(app, pool, verificarSesion, express,
+  path.resolve(process.env.PROFILE_UPLOAD_DIR || path.join(__dirname, '..', 'uploads', 'perfiles')));
   console.log('Rutas de perfil registradas exitosamente');
   
 app.use((error, req, res, next) => {
