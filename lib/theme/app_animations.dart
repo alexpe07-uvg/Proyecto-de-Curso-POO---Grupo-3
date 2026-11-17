@@ -698,3 +698,210 @@ class _EntradaSuaveState extends State<EntradaSuave>
     );
   }
 }
+
+class DragonBannerWidget extends StatelessWidget {
+  const DragonBannerWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
+    final imagen = Image.asset(
+      'assets/images/dragon_uvg.png',
+      height: 44,
+      width: 44,
+      fit: BoxFit.contain,
+    );
+
+    return ReboteAlPresionar(
+      escalaPresionado: 0.86,
+      escalaPop: 1.25,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 10, top: 4, bottom: 4),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: esOscuro
+                ? const Color(0xFF1A4A25)
+                : const Color(0x33FFFFFF),
+            border: Border.all(
+              color: esOscuro
+                  ? const Color(0xFF3E8E4C)
+                  : const Color(0x55165B29),
+              width: 1.4,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: esOscuro
+                ? ColorFiltered(
+                    colorFilter: const ColorFilter.mode(
+                      Color(0x24071F0C),
+                      BlendMode.srcATop,
+                    ),
+                    child: imagen,
+                  )
+                : imagen,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class BotonBannerAdaptativo extends StatelessWidget {
+  final Widget icon;
+  final String? tooltip;
+  final VoidCallback? onPressed;
+  final double escalaPop;
+
+  const BotonBannerAdaptativo({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+    this.escalaPop = 1.18,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
+    final fondo = esOscuro
+        ? const Color(0xFF1D4F29)
+        : const Color(0x24165B29);
+    final borde = esOscuro
+        ? const Color(0xFF347B43)
+        : const Color(0x40165B29);
+    final colorIcono = esOscuro
+        ? const Color(0xFF8CE029)
+        : const Color(0xFF165B29);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 7),
+      child: ReboteAlPresionar(
+        escalaPresionado: 0.88,
+        escalaPop: escalaPop,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: fondo,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borde, width: 1.2),
+          ),
+          child: IconTheme(
+            data: IconThemeData(color: colorIcono),
+            child: IconButton(
+              icon: icon,
+              color: colorIcono,
+              tooltip: tooltip,
+              onPressed: onPressed,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  final Widget destino;
+
+  const SplashScreen({super.key, required this.destino});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _escala;
+  late final Animation<double> _opacidad;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 950),
+    );
+    _escala = Tween<double>(begin: 0.82, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack),
+    );
+    _opacidad = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
+      ),
+    );
+    _ctrl.forward();
+
+    Future<void>.delayed(const Duration(milliseconds: 1950), () {
+      if (!mounted) return;
+      Navigator.pushReplacement(context, rutaSuave(widget.destino));
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
+    const verdeSplash = Color(0xFF8CE029);
+
+    return Scaffold(
+      backgroundColor: esOscuro ? const Color(0xFF0E2914) : verdeSplash,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Center(
+            child: FadeTransition(
+              opacity: _opacidad,
+              child: ScaleTransition(
+                scale: _escala,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 460),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: esOscuro
+                        ? ColorFiltered(
+                            colorFilter: const ColorFilter.mode(
+                              Color(0x18061A0B),
+                              BlendMode.srcATop,
+                            ),
+                            child: Image.asset(
+                              'assets/images/splash_uvg_matches.jpg',
+                              fit: BoxFit.contain,
+                            ),
+                          )
+                        : Image.asset(
+                            'assets/images/splash_uvg_matches.jpg',
+                            fit: BoxFit.contain,
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 42,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: esOscuro ? verdeSplash : const Color(0xFF165B29),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

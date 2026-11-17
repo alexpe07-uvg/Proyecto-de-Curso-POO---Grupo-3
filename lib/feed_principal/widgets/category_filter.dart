@@ -15,6 +15,23 @@ class CategoryFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
+    final fondoSeleccionado = esOscuro
+        ? const Color(0xFF8CE029)
+        : const Color(0xFF165B29);
+    final textoSeleccionado = esOscuro
+        ? const Color(0xFF12361B)
+        : Colors.white;
+    final fondoInactivo = esOscuro
+        ? const Color(0xFF15361D)
+        : const Color(0xFFE7F9CE);
+    final textoInactivo = esOscuro
+        ? const Color(0xFFC8F299)
+        : const Color(0xFF165B29);
+    final bordeChip = esOscuro
+        ? const Color(0xFF286335)
+        : const Color(0xFF72BF1D);
+
     return SizedBox(
       height: 50,
       child: ListView.builder(
@@ -34,16 +51,18 @@ class CategoryFilter extends StatelessWidget {
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutBack,
                 child: ChoiceChip(
+                  showCheckmark: false,
+                  side: BorderSide(color: bordeChip, width: 1.1),
                   label: Text(
                     cat,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? textoSeleccionado : textoInactivo,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     ),
                   ),
                   selected: isSelected,
-                  selectedColor: Theme.of(context).primaryColor,
-                  backgroundColor: Colors.grey[200],
+                  selectedColor: fondoSeleccionado,
+                  backgroundColor: fondoInactivo,
                   onSelected: (_) => onSelectCategory(cat),
                 ),
               ),

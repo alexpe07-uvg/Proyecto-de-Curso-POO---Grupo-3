@@ -163,40 +163,39 @@ class _FeedScreenState extends State<FeedScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leadingWidth: 58,
+        leading: const DragonBannerWidget(),
         title: const Text('Feed Principal de Publicaciones'),
         centerTitle: true,
         elevation: 1,
 
         // ===== BOTÓN DE PERFIL AGREGADO =====
         actions: [
-          ReboteAlPresionar(
-            child: IconButton(
-              icon: AnimatedRotation(
-                turns: _girosRecarga.toDouble(),
-                duration: const Duration(milliseconds: 520),
-                curve: Curves.easeOutCubic,
-                child: const Icon(Icons.refresh),
-              ),
-              tooltip: 'Recargar',
-              onPressed: _recargando ? null : _recargar,
+          BotonBannerAdaptativo(
+            tooltip: 'Recargar',
+            onPressed: _recargando ? null : _recargar,
+            icon: AnimatedRotation(
+              turns: _girosRecarga.toDouble(),
+              duration: const Duration(milliseconds: 520),
+              curve: Curves.easeOutCubic,
+              child: const Icon(Icons.refresh),
             ),
           ),
-          ReboteAlPresionar(
-            escalaPresionado: 0.88,
+          BotonBannerAdaptativo(
             escalaPop: 1.32,
-            child: IconButton(
-              icon: const Icon(Icons.person),
-              onPressed: () async {
-                await Future<void>.delayed(const Duration(milliseconds: 140));
-                if (!context.mounted) return;
-                await Navigator.push(
-                  context,
-                  rutaZoomPerfil(const VerPerfilView()),
-                );
-                if (mounted) await _cargarFeed();
-              },
-            ),
+            tooltip: 'Mi perfil',
+            icon: const Icon(Icons.person),
+            onPressed: () async {
+              await Future<void>.delayed(const Duration(milliseconds: 140));
+              if (!context.mounted) return;
+              await Navigator.push(
+                context,
+                rutaZoomPerfil(const VerPerfilView()),
+              );
+              if (mounted) await _cargarFeed();
+            },
           ),
+          const SizedBox(width: 6),
         ],
 
         // ===================================
