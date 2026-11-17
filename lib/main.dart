@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'crear_log_in/crear_log_in_view.dart';
+import 'theme/app_animations.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -28,7 +29,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system, // Cambia automáticamente según la configuración del sistema
 
       // Pantalla inicial
-      home: const CrearLogInView(),
+      home: const SplashScreen(destino: CrearLogInView()),
     );
   }
 }

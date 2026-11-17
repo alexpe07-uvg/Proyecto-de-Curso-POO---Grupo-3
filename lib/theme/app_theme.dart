@@ -18,8 +18,46 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorSchemeSeed: AppColors.verdeBrillante,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.verdeBannerClaro,
+        brightness: Brightness.light,
+        primary: AppColors.verdeBosqueLogo,
+        onPrimary: Colors.white,
+        secondary: AppColors.verdeBannerClaro,
+        onSecondary: AppColors.verdeBosqueLogo,
+      ),
       pageTransitionsTheme: _transiciones,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.verdeBannerClaro,
+        foregroundColor: AppColors.verdeBosqueLogo,
+        elevation: 2,
+        titleTextStyle: TextStyle(
+          color: AppColors.verdeBosqueLogo,
+          fontSize: 20,
+          fontWeight: FontWeight.w800,
+        ),
+        iconTheme: IconThemeData(color: AppColors.verdeBosqueLogo),
+        shape: Border(
+          bottom: BorderSide(
+            color: Color(0xFF72BF1D),
+            width: 1.5,
+          ),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.verdeBannerClaro,
+          foregroundColor: AppColors.verdeBosqueLogo,
+          elevation: 2,
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ),
     );
   }
 
@@ -33,21 +71,27 @@ class AppTheme {
 
       // Colores generales del sistema
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.verdeBrillante,
-        onPrimary: Colors.black, // Letras negras sobre botones verdes
+        primary: AppColors.verdeBannerClaro,
+        onPrimary: AppColors.verdeBosqueLogo, // Letras negras sobre botones verdes
         surface: AppColors.negroSuperficie,
         onSurface: Colors.white,
       ),
 
       // Barra superior (AppBar)
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.negroSuperficie,
+        backgroundColor: AppColors.verdeBannerOscuro,
         foregroundColor: Colors.white,
         elevation: 0,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w800,
+        ),
+        iconTheme: IconThemeData(color: AppColors.verdeBannerClaro),
         shape: Border(
           bottom: BorderSide(
-            color: AppColors.bordeAppBar,
-            width: 1,
+            color: AppColors.bordeBannerOscuro,
+            width: 1.5,
           ),
         ),
       ),
