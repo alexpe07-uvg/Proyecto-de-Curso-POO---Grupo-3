@@ -1,13 +1,25 @@
 import 'package:flutter/material.dart';
+import 'app_animations.dart';
 import 'app_colors.dart';
 
 class AppTheme {
+  static const PageTransitionsTheme _transiciones = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: TransicionPaginaSuaveBuilder(),
+      TargetPlatform.iOS: TransicionPaginaSuaveBuilder(),
+      TargetPlatform.windows: TransicionPaginaSuaveBuilder(),
+      TargetPlatform.macOS: TransicionPaginaSuaveBuilder(),
+      TargetPlatform.linux: TransicionPaginaSuaveBuilder(),
+    },
+  );
+
   // Tema Claro (por respaldo)
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       colorSchemeSeed: AppColors.verdeBrillante,
+      pageTransitionsTheme: _transiciones,
     );
   }
 
@@ -17,6 +29,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.negroFondo,
+      pageTransitionsTheme: _transiciones,
 
       // Colores generales del sistema
       colorScheme: const ColorScheme.dark(
