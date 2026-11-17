@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../ver_perfil/ver_perfil_view.dart';
 import '../../crear_evento/crear_evento_view.dart';
+import '../../theme/app_animations.dart';
 import '../models/item_feed.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/feed_card.dart';
@@ -88,10 +89,14 @@ class _FeedScreenState extends State<FeedScreen> {
   bool _cargandoCategorias = true;
   String? _errorCategorias;
   bool _recargando = false;
+  int _girosRecarga = 0;
 
   Future<void> _recargar() async {
     if (_recargando) return;
-    setState(() => _recargando = true);
+    setState(() {
+      _recargando = true;
+      _girosRecarga++;
+    });
     await Future.wait([_cargarCategorias(), _cargarFeed()]);
     if (mounted) setState(() => _recargando = false);
   }
@@ -164,20 +169,33 @@ class _FeedScreenState extends State<FeedScreen> {
 
         // ===== BOTÓN DE PERFIL AGREGADO =====
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Recargar',
-            onPressed: _recargando ? null : _recargar,
+          ReboteAlPresionar(
+            child: IconButton(
+              icon: AnimatedRotation(
+                turns: _girosRecarga.toDouble(),
+                duration: const Duration(milliseconds: 520),
+                curve: Curves.easeOutCubic,
+                child: const Icon(Icons.refresh),
+              ),
+              tooltip: 'Recargar',
+              onPressed: _recargando ? null : _recargar,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const VerPerfilView()),
-              );
-              if (mounted) await _cargarFeed();
-            },
+          ReboteAlPresionar(
+            escalaPresionado: 0.88,
+            escalaPop: 1.32,
+            child: IconButton(
+              icon: const Icon(Icons.person),
+              onPressed: () async {
+                await Future<void>.delayed(const Duration(milliseconds: 140));
+                if (!context.mounted) return;
+                await Navigator.push(
+                  context,
+                  rutaZoomPerfil(const VerPerfilView()),
+                );
+                if (mounted) await _cargarFeed();
+              },
+            ),
           ),
         ],
 
@@ -239,30 +257,40 @@ class _FeedScreenState extends State<FeedScreen> {
                       physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: itemsFiltrados.length,
                       itemBuilder: (context, index) {
-                        return FeedCard(item: itemsFiltrados[index]);
+                        return EntradaSuave(
+                          key: ValueKey<String>(itemsFiltrados[index].id),
+                          retrasoMs: (index * 45).clamp(0, 270),
+                          child: FeedCard(item: itemsFiltrados[index]),
+                        );
                       },
                     ),
                   ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        tooltip: 'Crear evento',
-        child: const Icon(Icons.add),
-        onPressed: () async {
-          final guardado = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(builder: (context) => const CrearEventoView()),
-          );
+      floatingActionButton: ReboteAlPresionar(
+        escalaPresionado: 0.88,
+        escalaPop: 1.24,
+        child: FloatingActionButton(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          tooltip: 'Crear evento',
+          child: const Icon(Icons.add),
+          onPressed: () async {
+            await Future<void>.delayed(const Duration(milliseconds: 160));
+            if (!context.mounted) return;
+            final guardado = await Navigator.push<bool>(
+              context,
+              rutaSuave(const CrearEventoView()),
+            );
 
-          if (!mounted) return;
+            if (!mounted) return;
 
-          if (guardado == true) {
-            await _cargarFeed();
-          }
-        },
+            if (guardado == true) {
+              await _cargarFeed();
+            }
+          },
+        ),
       ),
     );
   }

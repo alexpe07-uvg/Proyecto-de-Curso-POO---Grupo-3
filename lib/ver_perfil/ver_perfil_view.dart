@@ -1,5 +1,6 @@
 import '../crear_log_in/crear_log_in_controller.dart';
 import '../crear_log_in/crear_log_in_view.dart';
+import '../theme/app_animations.dart';
 import 'package:flutter/material.dart';
 
 import 'crear_perfil_model.dart';
@@ -16,23 +17,29 @@ class _VerPerfilViewState extends State<VerPerfilView> {
   late final controller = VerPerfilController(perfil);
   bool cargando = true;
   bool guardando = false;
+  bool _bajandoPestana = false;
   String? error;
+  int _disparadorError = 0;
   @override
   void initState() {
     super.initState();
     cargarDatos();
   }
 
-
-  void _cerrarSesion() {
+  Future<void> _cerrarSesion() async {
+    if (_bajandoPestana) return;
+    setState(() => _bajandoPestana = true);
+    await Future<void>.delayed(const Duration(milliseconds: 320));
+    if (!mounted) return;
     CrearLogInController.token = null;
     CrearLogInController.usuario = null;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const CrearLogInView()),
+      rutaCerrarSesion(const CrearLogInView()),
       (route) => false,
     );
   }
+
   String mensaje(Object e) => e.toString().replaceFirst('Exception: ', '');
   Future<void> cargarDatos() async {
     setState(() {
@@ -59,6 +66,7 @@ class _VerPerfilViewState extends State<VerPerfilView> {
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _disparadorError++);
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(mensaje(e))));
       }
@@ -106,6 +114,7 @@ class _VerPerfilViewState extends State<VerPerfilView> {
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _disparadorError++);
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(mensaje(e))));
       }
@@ -160,8 +169,16 @@ class _VerPerfilViewState extends State<VerPerfilView> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: !guardando,
-      child: Scaffold(
+      canPop: !guardando && !_bajandoPestana,
+      child: AnimatedSlide(
+        offset: _bajandoPestana ? const Offset(0, 1.12) : Offset.zero,
+        duration: const Duration(milliseconds: 340),
+        curve: Curves.easeInBack,
+        child: AnimatedScale(
+          scale: _bajandoPestana ? 0.92 : 1.0,
+          duration: const Duration(milliseconds: 340),
+          curve: Curves.easeInCubic,
+          child: Scaffold(
         appBar: AppBar(title: const Text('Mi perfil')),
         body: cargando
             ? const Center(child: CircularProgressIndicator())
@@ -182,86 +199,104 @@ class _VerPerfilViewState extends State<VerPerfilView> {
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        if (guardando) const LinearProgressIndicator(),
-                        const SizedBox(height: 24),
-                        ClipOval(
-                          child: perfil.rutaFotoPerfil == null
-                              ? const CircleAvatar(
-                                  radius: 70,
-                                  child: Icon(Icons.person, size: 70),
-                                )
-                              : Image.network(
-                                  perfil.rutaFotoPerfil!,
-                                  width: 140,
-                                  height: 140,
-                                  fit: BoxFit.cover,
-                                  headers: const {
-                                    'ngrok-skip-browser-warning': 'true',
-                                  },
-                                  errorBuilder: (_, error, stack) =>
-                                      const CircleAvatar(
-                                        radius: 70,
-                                        child: Icon(
-                                          Icons.broken_image,
-                                          size: 60,
-                                        ),
+                    child: EntradaSuave(
+                      child: EfectoErrorRojo(
+                        disparador: _disparadorError,
+                        radioBorde: 16,
+                        child: Column(
+                          children: [
+                            if (guardando) const LinearProgressIndicator(),
+                            const SizedBox(height: 24),
+                            ClipOval(
+                              child: perfil.rutaFotoPerfil == null
+                                  ? const CircleAvatar(
+                                      radius: 70,
+                                      child: Icon(Icons.person, size: 70),
+                                    )
+                                  : Image.network(
+                                      perfil.rutaFotoPerfil!,
+                                      width: 140,
+                                      height: 140,
+                                      fit: BoxFit.cover,
+                                      headers: const {
+                                        'ngrok-skip-browser-warning': 'true',
+                                      },
+                                      errorBuilder: (_, error, stack) =>
+                                          const CircleAvatar(
+                                            radius: 70,
+                                            child: Icon(
+                                              Icons.broken_image,
+                                              size: 60,
+                                            ),
+                                          ),
+                                    ),
+                            ),
+                            ReboteAlPresionar(
+                              child: TextButton.icon(
+                                onPressed: guardando ? null : seleccionarFoto,
+                                icon: const Icon(Icons.camera_alt),
+                                label: const Text('Cambiar foto'),
+                              ),
+                            ),
+                            if (perfil.rutaFotoPerfil != null)
+                              BotonCancelarAnimado(
+                                onPressed: guardando
+                                    ? null
+                                    : () => guardar(
+                                        controller.eliminarFotoPerfil,
+                                        'Foto eliminada',
                                       ),
+                                child: TextButton.icon(
+                                  onPressed: () {},
+                                  icon: const Icon(Icons.delete),
+                                  label: const Text('Eliminar foto'),
                                 ),
+                              ),
+                            const SizedBox(height: 24),
+                            Text(
+                              perfil.nombre,
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            ReboteAlPresionar(
+                              child: ElevatedButton.icon(
+                                onPressed: guardando ? null : editarNombre,
+                                icon: const Icon(Icons.edit),
+                                label: const Text('Editar nombre'),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            ListTile(
+                              leading: const Icon(Icons.email),
+                              title: const Text('Correo institucional'),
+                              subtitle: Text(perfil.correo),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.school),
+                              title: const Text('Carrera'),
+                              subtitle: Text(perfil.carrera),
+                            ),
+                            const SizedBox(height: 24),
+                            BotonCancelarAnimado(
+                              onPressed: guardando ? null : _cerrarSesion,
+                              child: OutlinedButton.icon(
+                                onPressed: () {},
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                  side: const BorderSide(color: Colors.red),
+                                ),
+                                icon: const Icon(Icons.logout),
+                                label: const Text('Cerrar sesión'),
+                              ),
+                            ),
+                          ],
                         ),
-                        TextButton.icon(
-                          onPressed: guardando ? null : seleccionarFoto,
-                          icon: const Icon(Icons.camera_alt),
-                          label: const Text('Cambiar foto'),
-                        ),
-                        if (perfil.rutaFotoPerfil != null)
-                          TextButton.icon(
-                            onPressed: guardando
-                                ? null
-                                : () => guardar(
-                                    controller.eliminarFotoPerfil,
-                                    'Foto eliminada',
-                                  ),
-                            icon: const Icon(Icons.delete),
-                            label: const Text('Eliminar foto'),
-                          ),
-                        const SizedBox(height: 24),
-                        Text(
-                          perfil.nombre,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: guardando ? null : editarNombre,
-                          icon: const Icon(Icons.edit),
-                          label: const Text('Editar nombre'),
-                        ),
-                        const SizedBox(height: 24),
-                        ListTile(
-                          leading: const Icon(Icons.email),
-                          title: const Text('Correo institucional'),
-                          subtitle: Text(perfil.correo),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.school),
-                          title: const Text('Carrera'),
-                          subtitle: Text(perfil.carrera),
-                        ),
-                        const SizedBox(height: 24),
-                        OutlinedButton.icon(
-                          onPressed: guardando ? null : _cerrarSesion,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.red),
-                          ),
-                          icon: const Icon(Icons.logout),
-                          label: const Text('Cerrar sesión'),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
+          ),
+        ),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../crear_log_in/crear_log_in_controller.dart';
+import '../../theme/app_animations.dart';
 import '../models/item_feed.dart';
 
 class FeedCard extends StatefulWidget {
@@ -21,6 +22,7 @@ class _FeedCardState extends State<FeedCard> {
   int _cupoOcupado = 0;
   List<String> _inscritosNombres = [];
   bool _procesandoInscripcion = false;
+  int _disparadorError = 0;
   int get _cupoMaximo => widget.item.cupoMaximo ?? 10;
 
   @override
@@ -114,6 +116,7 @@ class _FeedCardState extends State<FeedCard> {
 
         if (respuesta.statusCode != 200) {
           if (mounted) {
+            setState(() => _disparadorError++);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -139,19 +142,10 @@ class _FeedCardState extends State<FeedCard> {
 
         if (mounted) {
           setState(() {});
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                _inscrito
-                    ? '¡Te has inscrito a ${widget.item.titulo}!'
-                    : 'Has cancelado tu inscripción.',
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
         }
       } catch (_) {
         if (mounted) {
+          setState(() => _disparadorError++);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('No se pudo conectar con el servidor.'),
@@ -176,6 +170,7 @@ class _FeedCardState extends State<FeedCard> {
     if (!_inscrito) {
       if (_cupoOcupado >= _cupoMaximo) {
         if (mounted) {
+          setState(() => _disparadorError++);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Lo sentimos, este evento ya alcanzó su cupo máximo.'),
@@ -201,16 +196,6 @@ class _FeedCardState extends State<FeedCard> {
 
     if (mounted) {
       setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _inscrito
-                ? '¡Te has inscrito a ${widget.item.titulo}!'
-                : 'Has cancelado tu inscripción.',
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
     }
   }
 
@@ -247,15 +232,20 @@ class _FeedCardState extends State<FeedCard> {
         miNombre.trim().toLowerCase() == item.autor.trim().toLowerCase();
     final cupoLleno = _cupoOcupado >= _cupoMaximo;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: EfectoErrorRojo(
+        disparador: _disparadorError,
+        radioBorde: 12,
+        child: Card(
+          margin: EdgeInsets.zero,
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -395,37 +385,30 @@ class _FeedCardState extends State<FeedCard> {
                         ],
                       ),
                     )
-                  else if (_inscrito)
-                    OutlinedButton.icon(
-                      onPressed: _toggleInscripcion,
-                      icon: const Icon(Icons.check_circle, size: 18),
-                      label: const Text('Inscrito'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: esquema.primary,
-                        side: BorderSide(color: esquema.primary),
-                      ),
-                    )
-                  else if (cupoLleno)
+                  else if (!_inscrito && cupoLleno)
                     OutlinedButton.icon(
                       onPressed: null,
                       icon: const Icon(Icons.block, size: 18),
                       label: const Text('Cupo lleno'),
                     )
                   else
-                    OutlinedButton.icon(
+                    BotonInscripcionCartoon(
+                      inscrito: _inscrito,
                       onPressed: _toggleInscripcion,
-                      icon: const Icon(Icons.how_to_reg, size: 18),
-                      label: const Text('Inscribirme'),
                     ),
-                  TextButton.icon(
-                    onPressed: _abrirComentarios,
-                    icon: const Icon(Icons.forum_outlined, size: 18),
-                    label: Text('Comentarios (${_comentarios.length})'),
+                  ReboteAlPresionar(
+                    child: TextButton.icon(
+                      onPressed: _abrirComentarios,
+                      icon: const Icon(Icons.forum_outlined, size: 18),
+                      label: Text('Comentarios (${_comentarios.length})'),
+                    ),
                   ),
                 ],
               ),
             ],
           ],
+        ),
+      ),
         ),
       ),
     );
