@@ -332,6 +332,24 @@ app.post('/eventos', verificarSesion, async (req, res) => {
   }
 });
 
+app.delete('/eventos/:id', verificarSesion, async (req, res) => {
+  const publicacionId = Number(req.params.id);
+  if (!Number.isInteger(publicacionId) || publicacionId < 1) {
+    return res.status(400).json({ error: 'Identificador de evento inválido' });
+  }
+  try {
+    const [resultado] = await pool.execute(
+      'DELETE p FROM publicaciones p INNER JOIN eventos e ON e.publicacion_id = p.id WHERE p.id = ? AND p.usuario_id = ?',
+      [publicacionId, req.usuarioId]
+    );
+    if (resultado.affectedRows === 0) return res.status(404).json({ error: 'El evento no existe o no eres su creador' });
+    return res.json({ mensaje: 'Evento eliminado correctamente' });
+  } catch (error) {
+    console.error('Error eliminando evento:', error.code || error.name);
+    return res.status(500).json({ error: 'No se pudo eliminar el evento' });
+  }
+});
+
 app.get('/feed', verificarSesion, async (req, res) => {
   try {
     const [items] = await pool.execute(`
@@ -349,14 +367,16 @@ app.get('/feed', verificarSesion, async (req, res) => {
         DATE_FORMAT(
           e.fecha_hora, '%Y-%m-%dT%H:%i:%sZ'
         ) AS fechaEvento,
-        e.ubicacion
+        e.ubicacion,
+        e.dificultad,
+        (p.usuario_id = ?) AS esCreador
       FROM publicaciones p
       JOIN categorias c ON c.id = p.categoria_id
       JOIN usuarios u ON u.id = p.usuario_id
       LEFT JOIN eventos e ON e.publicacion_id = p.id
       ORDER BY p.creado_en DESC, p.id DESC
       LIMIT 100
-    `);
+    `, [req.usuarioId]);
 
     res.json(items);
   } catch (error) {

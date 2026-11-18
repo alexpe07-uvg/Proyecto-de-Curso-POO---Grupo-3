@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import '../../crear_log_in/crear_log_in_controller.dart';
 import '../models/item_feed.dart';
 
 class FeedCard extends StatefulWidget {
@@ -10,6 +14,28 @@ class FeedCard extends StatefulWidget {
 class _FeedCardState extends State<FeedCard> {
   late final List<Comentario> comentarios = List.from(widget.item.comentarios);
   bool inscrito = false;
+  Future<void> _eliminarEvento() async {
+    final confirmar = await showDialog<bool>(context: context, builder: (_) => AlertDialog(
+      title: const Text('Eliminar evento'),
+      content: const Text('¿Seguro que deseas eliminar este evento?'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar')),
+      ],
+    ));
+    if (confirmar != true || !mounted) return;
+    final token = CrearLogInController.token;
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+    if (token == null || baseUrl.isEmpty) return;
+    final respuesta = await http.delete(Uri.parse('$baseUrl/eventos/${widget.item.id}'), headers: {'Authorization': 'Bearer $token'});
+    if (!mounted) return;
+    if (respuesta.statusCode == 200) {
+      Navigator.pop(context, true);
+    } else {
+      final datos = jsonDecode(utf8.decode(respuesta.bodyBytes)) as Map<String, dynamic>;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(datos['error']?.toString() ?? 'No se pudo eliminar')));
+    }
+  }
   @override Widget build(BuildContext context) {
     final item = widget.item; final evento = item.tipo == TipoItem.evento;
     return Card(margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -17,8 +43,10 @@ class _FeedCardState extends State<FeedCard> {
       const SizedBox(height: 12), Text(item.titulo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), const SizedBox(height: 8), Text(item.descripcion),
       if (evento) ...[
         const Divider(height: 24),
-        Text('🕒 ${item.fechaEvento ?? ''}'),
+        Text('🕒 ${_formatearFecha(item.fechaEvento)}'),
         Text('📍 ${item.ubicacion ?? ''}'),
+        if (item.dificultad != null) Text('⚡ Dificultad: ${item.dificultad}'),
+        if (item.esCreador) TextButton.icon(onPressed: _eliminarEvento, icon: const Icon(Icons.delete_outline, color: Colors.red), label: const Text('Eliminar evento')),
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
           TextButton.icon(onPressed: () => _abrirComentarios(context), icon: const Icon(Icons.forum_outlined), label: Text('Comentarios (${comentarios.length})')),
           const SizedBox(width: 8),
@@ -26,6 +54,12 @@ class _FeedCardState extends State<FeedCard> {
         ]),
       ],
     ])));
+  }
+  String _formatearFecha(String? valor) {
+    final fecha = DateTime.tryParse(valor ?? '');
+    if (fecha == null) return valor ?? '';
+    final local = fecha.toLocal();
+    return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}/${local.year} - ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
   void _abrirComentarios(BuildContext context) => showModalBottomSheet<void>(context: context, isScrollControlled: true, builder: (_) => _ComentariosSheet(comentarios: comentarios, onChanged: () => setState(() {})));
 }

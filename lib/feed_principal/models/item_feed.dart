@@ -18,6 +18,8 @@ class ItemFeed {
   final DateTime fecha;
   final String? fechaEvento;
   final String? ubicacion;
+  final String? dificultad;
+  final bool esCreador;
   final List<Comentario> comentarios;
 
   ItemFeed({
@@ -30,6 +32,8 @@ class ItemFeed {
     required this.fecha,
     this.fechaEvento,
     this.ubicacion,
+    this.dificultad,
+    this.esCreador = false,
     List<Comentario>? comentarios,
   }) : comentarios = comentarios ?? [];
 
@@ -44,6 +48,8 @@ class ItemFeed {
       fecha: DateTime.parse(datos['fecha'] as String).toLocal(),
       fechaEvento: datos['fechaEvento'] as String?,
       ubicacion: datos['ubicacion'] as String?,
+      dificultad: datos['dificultad'] as String?,
+      esCreador: datos['esCreador'] == true || datos['esCreador'] == 1,
       comentarios: (datos['comentarios'] as List<dynamic>? ?? []).map((c) => Comentario.fromJson(c)).toList(),
     );
   }
