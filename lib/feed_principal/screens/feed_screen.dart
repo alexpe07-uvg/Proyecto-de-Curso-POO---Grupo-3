@@ -259,7 +259,10 @@ class _FeedScreenState extends State<FeedScreen> {
                         return EntradaSuave(
                           key: ValueKey<String>(itemsFiltrados[index].id),
                           retrasoMs: (index * 45).clamp(0, 270),
-                          child: FeedCard(item: itemsFiltrados[index]),
+                          child: FeedCard(
+                            item: itemsFiltrados[index],
+                            onEliminado: _cargarFeed,
+                          ),
                         );
                       },
                     ),

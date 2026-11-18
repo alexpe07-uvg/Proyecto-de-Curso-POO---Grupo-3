@@ -333,6 +333,7 @@ function registrarContenido(app, pool, verificarSesion) {
           p.descripcion,
           c.nombre AS categoria,
           u.nombre AS autor,
+          u.foto_url AS autorFotoUrl,
           p.creado_en AS fecha,
           CASE
             WHEN e.id IS NULL THEN 'publicacion'
@@ -420,18 +421,50 @@ function registrarContenido(app, pool, verificarSesion) {
     if (!Number.isInteger(publicacionId) || publicacionId < 1) {
       return res.status(400).json({ error: 'Identificador de evento inválido' });
     }
+    let conexion;
     try {
-      const [resultado] = await pool.execute(
-        'DELETE p FROM publicaciones p INNER JOIN eventos e ON e.publicacion_id = p.id WHERE p.id = ? AND p.usuario_id = ?',
+      conexion = await pool.getConnection();
+      const [filas] = await conexion.execute(
+        `SELECT p.id
+         FROM publicaciones p
+         INNER JOIN eventos e ON e.publicacion_id = p.id
+         WHERE p.id = ? AND p.usuario_id = ?
+         LIMIT 1`,
         [publicacionId, req.usuarioId]
       );
-      if (resultado.affectedRows === 0) {
+      if (filas.length === 0) {
         return res.status(404).json({ error: 'El evento no existe o no eres su creador' });
+      }
+      await conexion.beginTransaction();
+      const usaMySQL = await asegurarTablas(pool);
+      if (usaMySQL) {
+        await conexion.execute('DELETE FROM inscripciones WHERE publicacion_id = ?', [publicacionId]);
+        await conexion.execute('DELETE FROM comentarios WHERE publicacion_id = ?', [publicacionId]);
+      }
+      await conexion.execute('DELETE FROM eventos WHERE publicacion_id = ?', [publicacionId]);
+      await conexion.execute('DELETE FROM publicaciones WHERE id = ? AND usuario_id = ?', [publicacionId, req.usuarioId]);
+      await conexion.commit();
+      if (!usaMySQL) {
+        const respaldo = await leerRespaldo();
+        respaldo.inscripciones = respaldo.inscripciones.filter(
+          (i) => String(i.publicacionId) !== String(publicacionId)
+        );
+        respaldo.comentarios = respaldo.comentarios.filter(
+          (c) => String(c.publicacionId) !== String(publicacionId)
+        );
+        await guardarRespaldo(respaldo);
       }
       return res.json({ mensaje: 'Evento eliminado correctamente' });
     } catch (error) {
+      if (conexion) {
+        try {
+          await conexion.rollback();
+        } catch {}
+      }
       console.error('Error eliminando evento:', error.code || error.name);
       return res.status(500).json({ error: 'No se pudo eliminar el evento' });
+    } finally {
+      if (conexion) conexion.release();
     }
   });
 

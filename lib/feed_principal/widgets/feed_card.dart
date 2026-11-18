@@ -9,8 +9,9 @@ import '../models/item_feed.dart';
 
 class FeedCard extends StatefulWidget {
   final ItemFeed item;
+  final VoidCallback? onEliminado;
 
-  const FeedCard({super.key, required this.item});
+  const FeedCard({super.key, required this.item, this.onEliminado});
 
   @override
   State<FeedCard> createState() => _FeedCardState();
@@ -223,7 +224,7 @@ class _FeedCardState extends State<FeedCard> {
       if (!mounted) return;
       if (respuesta.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Evento eliminado')));
-        Navigator.pop(context, true);
+        widget.onEliminado?.call();
       } else {
         final datos = jsonDecode(utf8.decode(respuesta.bodyBytes)) as Map<String, dynamic>;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(datos['error']?.toString() ?? 'No se pudo eliminar')));
@@ -256,6 +257,44 @@ class _FeedCardState extends State<FeedCard> {
     );
   }
 
+  String? _resolverUrlFotoAutor() {
+    final raw = widget.item.autorFotoUrl?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+    if (baseUrl.isEmpty) return null;
+    return Uri.parse('$baseUrl/').resolve(raw).toString();
+  }
+
+  Widget _construirAvatar(ColorScheme esquema, bool esEvento) {
+    final iconoPorDefecto = CircleAvatar(
+      backgroundColor: esquema.primary.withValues(alpha: 0.2),
+      child: Icon(
+        esEvento ? Icons.event : Icons.article,
+        color: esquema.primary,
+      ),
+    );
+    final urlFoto = _resolverUrlFotoAutor();
+    if (urlFoto == null) return iconoPorDefecto;
+
+    return CircleAvatar(
+      backgroundColor: esquema.primary.withValues(alpha: 0.2),
+      child: ClipOval(
+        child: Image.network(
+          urlFoto,
+          width: 40,
+          height: 40,
+          fit: BoxFit.cover,
+          headers: const {'ngrok-skip-browser-warning': 'true'},
+          errorBuilder: (_, _, _) => Icon(
+            esEvento ? Icons.event : Icons.article,
+            color: esquema.primary,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
@@ -283,13 +322,7 @@ class _FeedCardState extends State<FeedCard> {
               children: [
                 Row(
                   children: [
-                    CircleAvatar(
-                      backgroundColor: esquema.primary.withValues(alpha: 0.2),
-                      child: Icon(
-                        esEvento ? Icons.event : Icons.article,
-                        color: esquema.primary,
-                      ),
-                    ),
+                    _construirAvatar(esquema, esEvento),
                     const SizedBox(width: 10),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
