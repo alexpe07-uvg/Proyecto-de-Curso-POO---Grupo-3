@@ -1,10 +1,19 @@
 {
+<<<<<<< HEAD
     "name": "proyecto_poo",
     "short_name": "proyecto_poo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
+=======
+    "name": "UVG Matches",
+    "short_name": "UVG Matches",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#8CE029",
+    "theme_color": "#165B29",
+>>>>>>> 1c8681ba39f49a364646f2a7d6f2739abfaae4cb
     "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,

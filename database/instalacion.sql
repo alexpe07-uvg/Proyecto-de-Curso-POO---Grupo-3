@@ -35,4 +35,24 @@ CREATE TABLE eventos (
  FOREIGN KEY(publicacion_id) REFERENCES publicaciones(id),
  CONSTRAINT chk_eventos_cupo CHECK(cupo_maximo > 0)
 ) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS inscripciones (
+ id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ publicacion_id BIGINT UNSIGNED NOT NULL,
+ usuario_id BIGINT UNSIGNED NOT NULL,
+ creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ CONSTRAINT uq_inscripciones_evento_usuario UNIQUE(publicacion_id, usuario_id),
+ FOREIGN KEY(publicacion_id) REFERENCES publicaciones(id) ON DELETE CASCADE,
+ FOREIGN KEY(usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS comentarios (
+ id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ publicacion_id BIGINT UNSIGNED NOT NULL,
+ usuario_id BIGINT UNSIGNED NOT NULL,
+ padre_id BIGINT UNSIGNED NULL,
+ texto TEXT NOT NULL,
+ creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(publicacion_id) REFERENCES publicaciones(id) ON DELETE CASCADE,
+ FOREIGN KEY(usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+ FOREIGN KEY(padre_id) REFERENCES comentarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
 INSERT INTO categorias(nombre) VALUES ('Deportes y Actividad Física'),('Gaming / Juegos de mesa');

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_animations.dart';
 import 'crear_evento_model.dart';
 import 'crear_evento_controller.dart';
 
@@ -21,6 +22,7 @@ class _CrearEventoViewState extends State<CrearEventoView> {
   String _dificultad = 'Casual';
   DateTime? _fechaSeleccionada;
   TimeOfDay? _horaSeleccionada;
+  int _disparadorError = 0;
 
   @override
   void initState() {
@@ -79,6 +81,7 @@ class _CrearEventoViewState extends State<CrearEventoView> {
         _ubicacionCtrl.text.trim().isEmpty ||
         _fechaSeleccionada == null ||
         _horaSeleccionada == null) {
+      setState(() => _disparadorError++);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Por favor completa todos los campos obligatorios'),
@@ -88,7 +91,20 @@ class _CrearEventoViewState extends State<CrearEventoView> {
       return;
     }
 
-    final int cupo = int.tryParse(_cupoCtrl.text.trim()) ?? 1;
+    final int? cupoParseado = int.tryParse(_cupoCtrl.text.trim());
+
+    if (cupoParseado == null || cupoParseado < 1) {
+      setState(() => _disparadorError++);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('El cupo máximo debe ser un número mayor que cero'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    final int cupo = cupoParseado;
 
     final DateTime fechaFinal = DateTime(
       _fechaSeleccionada!.year,
@@ -108,7 +124,10 @@ class _CrearEventoViewState extends State<CrearEventoView> {
       descripcion: _descripcionCtrl.text.trim(),
     );
 
-    _controller.publicarEvento(context, nuevoEvento);
+    await _controller.publicarEvento(context, nuevoEvento);
+    if (mounted) {
+      setState(() => _disparadorError++);
+    }
   }
 
   @override
@@ -142,9 +161,13 @@ class _CrearEventoViewState extends State<CrearEventoView> {
           constraints: const BoxConstraints(maxWidth: 650),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            child: EntradaSuave(
+              child: EfectoErrorRojo(
+                disparador: _disparadorError,
+                radioBorde: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                 Text(
                   'Información del evento',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -240,59 +263,63 @@ class _CrearEventoViewState extends State<CrearEventoView> {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _abrirSelectorFecha(context),
-                        icon: Icon(
-                          Icons.calendar_today,
-                          color: _fechaSeleccionada != null ? colorAcento : null,
-                          size: 18,
-                        ),
-                        label: Text(
-                          textoFecha,
-                          style: TextStyle(
+                      child: ReboteAlPresionar(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _abrirSelectorFecha(context),
+                          icon: Icon(
+                            Icons.calendar_today,
                             color: _fechaSeleccionada != null ? colorAcento : null,
-                            fontWeight: _fechaSeleccionada != null
-                                ? FontWeight.w600
-                                : FontWeight.normal,
+                            size: 18,
                           ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                          label: Text(
+                            textoFecha,
+                            style: TextStyle(
+                              color: _fechaSeleccionada != null ? colorAcento : null,
+                              fontWeight: _fechaSeleccionada != null
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
                           ),
-                          side: _fechaSeleccionada != null
-                              ? BorderSide(color: colorAcento)
-                              : null,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            side: _fechaSeleccionada != null
+                                ? BorderSide(color: colorAcento)
+                                : null,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _abrirSelectorHora(context),
-                        icon: Icon(
-                          Icons.access_time,
-                          color: _horaSeleccionada != null ? colorAcento : null,
-                          size: 18,
-                        ),
-                        label: Text(
-                          textoHora,
-                          style: TextStyle(
+                      child: ReboteAlPresionar(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _abrirSelectorHora(context),
+                          icon: Icon(
+                            Icons.access_time,
                             color: _horaSeleccionada != null ? colorAcento : null,
-                            fontWeight: _horaSeleccionada != null
-                                ? FontWeight.w600
-                                : FontWeight.normal,
+                            size: 18,
                           ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                          label: Text(
+                            textoHora,
+                            style: TextStyle(
+                              color: _horaSeleccionada != null ? colorAcento : null,
+                              fontWeight: _horaSeleccionada != null
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
                           ),
-                          side: _horaSeleccionada != null
-                              ? BorderSide(color: colorAcento)
-                              : null,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            side: _horaSeleccionada != null
+                                ? BorderSide(color: colorAcento)
+                                : null,
+                          ),
                         ),
                       ),
                     ),
@@ -336,42 +363,49 @@ class _CrearEventoViewState extends State<CrearEventoView> {
                 const SizedBox(height: 24),
 
                 // Botón Publicar
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: _controller.cargando ? null : _enviarFormulario,
-                    icon: _controller.cargando
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.2,
-                              color: Colors.black,
-                            ),
-                          )
-                        : const Icon(Icons.add_circle_outline),
-                    label: Text(
-                      _controller.cargando ? 'Publicando...' : 'Publicar',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ReboteAlPresionar(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: _controller.cargando ? null : _enviarFormulario,
+                      icon: _controller.cargando
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.black,
+                              ),
+                            )
+                          : const Icon(Icons.add_circle_outline),
+                      label: Text(
+                        _controller.cargando ? 'Publicando...' : 'Publicar',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
 
                 // Botón Cancelar
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: TextButton(
-                    onPressed: _controller.cargando ? null : () => _controller.cancelar(context),
-                    child: const Text(
-                      'Cancelar',
-                      style: TextStyle(color: Colors.white70, fontSize: 15),
+                BotonCancelarAnimado(
+                  onPressed: _controller.cargando ? null : () => _controller.cancelar(context),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: Colors.white70, fontSize: 15),
+                      ),
                     ),
                   ),
                 ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),

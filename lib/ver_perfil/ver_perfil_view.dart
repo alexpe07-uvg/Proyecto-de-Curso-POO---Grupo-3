@@ -1,100 +1,301 @@
-import 'dart:io';
+import '../crear_log_in/crear_log_in_controller.dart';
+import '../crear_log_in/crear_log_in_view.dart';
+import '../theme/app_animations.dart';
 import 'package:flutter/material.dart';
 
 import 'crear_perfil_model.dart';
 import 'ver_perfil_controller.dart';
 
 class VerPerfilView extends StatefulWidget {
-  const VerPerfilView({
-    super.key,
-  });
-
+  const VerPerfilView({super.key});
   @override
   State<VerPerfilView> createState() => _VerPerfilViewState();
 }
 
 class _VerPerfilViewState extends State<VerPerfilView> {
-  late VerPerfilModel perfil;
-  late VerPerfilController controller;
-
+  final perfil = VerPerfilModel(nombre: '');
+  late final controller = VerPerfilController(perfil);
+  bool cargando = true;
+  bool guardando = false;
+  bool _bajandoPestana = false;
+  String? error;
+  int _disparadorError = 0;
   @override
   void initState() {
     super.initState();
+    cargarDatos();
+  }
 
-    perfil = VerPerfilModel(
-      nombre: "Henry",
+  Future<void> _cerrarSesion() async {
+    if (_bajandoPestana) return;
+    setState(() => _bajandoPestana = true);
+    await Future<void>.delayed(const Duration(milliseconds: 320));
+    if (!mounted) return;
+    CrearLogInController.token = null;
+    CrearLogInController.usuario = null;
+    Navigator.pushAndRemoveUntil(
+      context,
+      rutaCerrarSesion(const CrearLogInView()),
+      (route) => false,
     );
+  }
 
-    controller = VerPerfilController(perfil);
+  String mensaje(Object e) => e.toString().replaceFirst('Exception: ', '');
+  Future<void> cargarDatos() async {
+    setState(() {
+      cargando = true;
+      error = null;
+    });
+    try {
+      await controller.cargarPerfil();
+    } catch (e) {
+      if (mounted) error = mensaje(e);
+    } finally {
+      if (mounted) setState(() => cargando = false);
+    }
+  }
+
+  Future<void> guardar(Future<void> Function() accion, String exito) async {
+    if (guardando) return;
+    setState(() => guardando = true);
+    try {
+      await accion();
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(exito)));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _disparadorError++);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(mensaje(e))));
+      }
+    } finally {
+      if (mounted) setState(() => guardando = false);
+    }
   }
 
   Future<void> seleccionarFoto() async {
-    bool cambio = await controller.cambiarFotoPerfil();
+    setState(() => guardando = true);
+    try {
+      final bytes = await controller.seleccionarFoto();
+      if (bytes == null || !mounted) return;
+      final confirmar = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Actualizar fotografía'),
+          content: Image.memory(
+            bytes,
+            width: 240,
+            height: 240,
+            fit: BoxFit.contain,
+            errorBuilder: (_, error, stack) => const Text(
+              'No se pudo previsualizar la imagen. Usa PNG, JPEG o WebP.',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Guardar'),
+            ),
+          ],
+        ),
+      );
+      if (confirmar == true) {
+        await controller.guardarFoto(bytes);
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('Foto actualizada')));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _disparadorError++);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(mensaje(e))));
+      }
+    } finally {
+      if (mounted) setState(() => guardando = false);
+    }
+  }
 
-    if (cambio) {
-      setState(() {});
+  Future<void> editarNombre() async {
+    String texto = perfil.nombre;
+    final form = GlobalKey<FormState>();
+    final nombre = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Editar nombre'),
+        content: Form(
+          key: form,
+          child: TextFormField(
+            initialValue: perfil.nombre,
+            onChanged: (valor) => texto = valor,
+            autofocus: true,
+            maxLength: 100,
+            decoration: const InputDecoration(labelText: 'Nombre'),
+            validator: (valor) =>
+                (valor ?? '').trim().isEmpty ? 'Escribe tu nombre' : null,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (form.currentState!.validate()) {
+                Navigator.pop(context, texto.trim());
+              }
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (nombre != null && mounted) {
+      await guardar(
+        () => controller.cambiarNombre(nombre),
+        'Nombre actualizado',
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Mi perfil"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
-
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-
-            GestureDetector(
-              onTap: seleccionarFoto,
-
-              child: CircleAvatar(
-                radius: 70,
-
-                backgroundImage: perfil.rutaFotoPerfil != null
-                    ? FileImage(
-                        File(perfil.rutaFotoPerfil!),
-                      )
-                    : null,
-
-                child: perfil.rutaFotoPerfil == null
-                    ? const Icon(
-                        Icons.person,
-                        size: 70,
-                      )
-                    : null,
+    return PopScope(
+      canPop: !guardando && !_bajandoPestana,
+      child: AnimatedSlide(
+        offset: _bajandoPestana ? const Offset(0, 1.12) : Offset.zero,
+        duration: const Duration(milliseconds: 340),
+        curve: Curves.easeInBack,
+        child: AnimatedScale(
+          scale: _bajandoPestana ? 0.92 : 1.0,
+          duration: const Duration(milliseconds: 340),
+          curve: Curves.easeInCubic,
+          child: Scaffold(
+        appBar: AppBar(title: const Text('Mi perfil')),
+        body: cargando
+            ? const Center(child: CircularProgressIndicator())
+            : error != null
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(error!),
+                    TextButton(
+                      onPressed: cargarDatos,
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              )
+            : SingleChildScrollView(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: EntradaSuave(
+                      child: EfectoErrorRojo(
+                        disparador: _disparadorError,
+                        radioBorde: 16,
+                        child: Column(
+                          children: [
+                            if (guardando) const LinearProgressIndicator(),
+                            const SizedBox(height: 24),
+                            ClipOval(
+                              child: perfil.rutaFotoPerfil == null
+                                  ? const CircleAvatar(
+                                      radius: 70,
+                                      child: Icon(Icons.person, size: 70),
+                                    )
+                                  : Image.network(
+                                      perfil.rutaFotoPerfil!,
+                                      width: 140,
+                                      height: 140,
+                                      fit: BoxFit.cover,
+                                      headers: const {
+                                        'ngrok-skip-browser-warning': 'true',
+                                      },
+                                      errorBuilder: (_, error, stack) =>
+                                          const CircleAvatar(
+                                            radius: 70,
+                                            child: Icon(
+                                              Icons.broken_image,
+                                              size: 60,
+                                            ),
+                                          ),
+                                    ),
+                            ),
+                            ReboteAlPresionar(
+                              child: TextButton.icon(
+                                onPressed: guardando ? null : seleccionarFoto,
+                                icon: const Icon(Icons.camera_alt),
+                                label: const Text('Cambiar foto'),
+                              ),
+                            ),
+                            if (perfil.rutaFotoPerfil != null)
+                              BotonCancelarAnimado(
+                                onPressed: guardando
+                                    ? null
+                                    : () => guardar(
+                                        controller.eliminarFotoPerfil,
+                                        'Foto eliminada',
+                                      ),
+                                child: TextButton.icon(
+                                  onPressed: () {},
+                                  icon: const Icon(Icons.delete),
+                                  label: const Text('Eliminar foto'),
+                                ),
+                              ),
+                            const SizedBox(height: 24),
+                            Text(
+                              perfil.nombre,
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            ReboteAlPresionar(
+                              child: ElevatedButton.icon(
+                                onPressed: guardando ? null : editarNombre,
+                                icon: const Icon(Icons.edit),
+                                label: const Text('Editar nombre'),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            ListTile(
+                              leading: const Icon(Icons.email),
+                              title: const Text('Correo institucional'),
+                              subtitle: Text(perfil.correo),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.school),
+                              title: const Text('Carrera'),
+                              subtitle: Text(perfil.carrera),
+                            ),
+                            const SizedBox(height: 24),
+                            BotonCancelarAnimado(
+                              onPressed: guardando ? null : _cerrarSesion,
+                              child: OutlinedButton.icon(
+                                onPressed: () {},
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                  side: const BorderSide(color: Colors.red),
+                                ),
+                                icon: const Icon(Icons.logout),
+                                label: const Text('Cerrar sesión'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Text(
-              perfil.nombre,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            ElevatedButton.icon(
-              onPressed: seleccionarFoto,
-              icon: const Icon(Icons.camera_alt),
-              label: const Text(
-                "Cambiar foto de perfil",
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

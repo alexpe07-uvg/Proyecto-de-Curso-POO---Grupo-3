@@ -1,24 +1,26 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'crear_log_in_model.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CrearLogInController {
   final CrearLogInModel model = CrearLogInModel();
+  final ImagePicker _imagePicker = ImagePicker();
+  Uint8List? _fotoBytes;
 
-  // Sesión temporal en memoria: se pierde al cerrar la app.
   static String? token;
   static Map<String, dynamic>? usuario;
+  static String? fotoPerfilLocal;
 
   Future<void> login() async {
-    const baseUrl = String.fromEnvironment(
-      'API_BASE_URL',
-      defaultValue: 'http://127.0.0.1:3000',
-    );
+    final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
     final respuesta = await http
         .post(
           Uri.parse('$baseUrl/auth/login'),
-          headers: {'Content-Type': 'application/json'},
+          headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true',},
           body: jsonEncode({
             'email': model.email.trim(),
             'password': model.password,
@@ -38,15 +40,12 @@ class CrearLogInController {
   }
 
   Future<void> registrar() async {
-    const baseUrl = String.fromEnvironment(
-      'API_BASE_URL',
-      defaultValue: 'http://127.0.0.1:3000',
-    );
+    final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
     final respuesta = await http
         .post(
           Uri.parse('$baseUrl/auth/registro'),
-          headers: {'Content-Type': 'application/json'},
+          headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true',},
           body: jsonEncode({
             'email': model.email.trim(),
             'password': model.password,
@@ -61,6 +60,54 @@ class CrearLogInController {
 
     if (respuesta.statusCode != 201) {
       throw Exception(datos['error'] ?? 'No se pudo crear la cuenta');
+    }
+  }
+  Future<bool> cambiarFotoPerfil() async {
+    final XFile? imagen = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+    );
+
+    if (imagen != null) {
+      _fotoBytes = await imagen.readAsBytes();
+      model.rutaFotoPerfil = imagen.path;
+      fotoPerfilLocal = imagen.path;
+      return true;
+    }
+
+    return false;
+    }
+
+  Future<bool> subirFotoRegistro() async {
+    final bytes = _fotoBytes;
+    if (bytes == null) return true;
+    if (bytes.length > 5 * 1024 * 1024) return false;
+
+    try {
+      await login();
+
+      final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+      final respuesta = await http
+          .post(
+            Uri.parse('$baseUrl/perfil/foto'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/octet-stream',
+              'ngrok-skip-browser-warning': 'true',
+            },
+            body: bytes,
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (respuesta.statusCode != 200) return false;
+
+      _fotoBytes = null;
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      token = null;
+      usuario = null;
     }
   }
 }

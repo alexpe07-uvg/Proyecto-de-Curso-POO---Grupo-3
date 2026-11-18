@@ -1,5 +1,39 @@
 enum TipoItem { publicacion, evento }
 
+class Comentario {
+  final String id;
+  final String autor;
+  final String texto;
+  final DateTime fecha;
+  final List<Comentario> respuestas;
+
+  Comentario({
+    required this.id,
+    required this.autor,
+    required this.texto,
+    required this.fecha,
+    List<Comentario>? respuestas,
+  }) : respuestas = respuestas ?? [];
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'autor': autor,
+    'texto': texto,
+    'fecha': fecha.toIso8601String(),
+    'respuestas': respuestas.map((r) => r.toJson()).toList(),
+  };
+
+  factory Comentario.fromJson(Map<String, dynamic> datos) => Comentario(
+    id: datos['id'].toString(),
+    autor: datos['autor'] as String? ?? 'Usuario',
+    texto: datos['texto'] as String? ?? datos['contenido'] as String? ?? '',
+    fecha: DateTime.tryParse(datos['fecha'] as String? ?? '') ?? DateTime.now(),
+    respuestas: (datos['respuestas'] as List<dynamic>? ?? [])
+        .map((r) => Comentario.fromJson(r as Map<String, dynamic>))
+        .toList(),
+  );
+}
+
 class ItemFeed {
   final String id;
   final String titulo;
@@ -10,6 +44,25 @@ class ItemFeed {
   final DateTime fecha;
   final String? fechaEvento;
   final String? ubicacion;
+  final String? dificultad;
+  final bool esCreador;
+  final int? cupoMaximo;
+  final int cupoOcupado;
+  final bool inscrito;
+  final List<String> inscritosNombres;
+  final List<Comentario> comentarios;
+
+  String get fechaEventoVisible {
+    if (fechaEvento == null || fechaEvento!.isEmpty) return '';
+    final fechaParseada = DateTime.tryParse(fechaEvento!);
+    if (fechaParseada == null) return fechaEvento!;
+    final local = fechaParseada.toLocal();
+    final dia = local.day.toString().padLeft(2, '0');
+    final mes = local.month.toString().padLeft(2, '0');
+    final hora = local.hour.toString().padLeft(2, '0');
+    final minuto = local.minute.toString().padLeft(2, '0');
+    return '$dia/$mes/${local.year} - $hora:$minuto';
+  }
 
   ItemFeed({
     required this.id,
@@ -21,7 +74,15 @@ class ItemFeed {
     required this.fecha,
     this.fechaEvento,
     this.ubicacion,
-  });
+    this.dificultad,
+    this.esCreador = false,
+    this.cupoMaximo,
+    this.cupoOcupado = 0,
+    this.inscrito = false,
+    List<String>? inscritosNombres,
+    List<Comentario>? comentarios,
+  }) : inscritosNombres = inscritosNombres ?? [],
+       comentarios = comentarios ?? [];
 
   factory ItemFeed.fromJson(Map<String, dynamic> datos) {
     return ItemFeed(
@@ -34,6 +95,21 @@ class ItemFeed {
       fecha: DateTime.parse(datos['fecha'] as String).toLocal(),
       fechaEvento: datos['fechaEvento'] as String?,
       ubicacion: datos['ubicacion'] as String?,
+      dificultad: datos['dificultad'] as String?,
+      esCreador: datos['esCreador'] == true || datos['esCreador'] == 1,
+      cupoMaximo: datos['cupoMaximo'] != null
+          ? int.tryParse(datos['cupoMaximo'].toString())
+          : null,
+      cupoOcupado: datos['cupoOcupado'] != null
+          ? (int.tryParse(datos['cupoOcupado'].toString()) ?? 0)
+          : 0,
+      inscrito: datos['inscrito'] == true || datos['inscrito'] == 1,
+      inscritosNombres: (datos['inscritosNombres'] as List<dynamic>? ?? [])
+          .map((n) => n.toString())
+          .toList(),
+      comentarios: (datos['comentarios'] as List<dynamic>? ?? [])
+          .map((c) => Comentario.fromJson(c as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

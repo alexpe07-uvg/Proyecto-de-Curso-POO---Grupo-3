@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../ver_perfil/ver_perfil_view.dart';
 import '../../crear_evento/crear_evento_view.dart';
+import '../../theme/app_animations.dart';
 import '../models/item_feed.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/feed_card.dart';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../crear_log_in/crear_log_in_controller.dart';
 
@@ -41,15 +44,15 @@ class _FeedScreenState extends State<FeedScreen> {
         throw Exception('Debes iniciar sesión nuevamente.');
       }
 
-      const baseUrl = String.fromEnvironment(
-        'API_BASE_URL',
-        defaultValue: 'http://127.0.0.1:3000',
-      );
+      final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
       final respuesta = await http
           .get(
             Uri.parse('$baseUrl/feed'),
-            headers: {'Authorization': 'Bearer $token'},
+            headers: {
+              'Authorization': 'Bearer $token',
+              'ngrok-skip-browser-warning': 'true',
+            },
           )
           .timeout(const Duration(seconds: 10));
 
@@ -85,6 +88,18 @@ class _FeedScreenState extends State<FeedScreen> {
   List<String> categorias = ['Todos'];
   bool _cargandoCategorias = true;
   String? _errorCategorias;
+  bool _recargando = false;
+  int _girosRecarga = 0;
+
+  Future<void> _recargar() async {
+    if (_recargando) return;
+    setState(() {
+      _recargando = true;
+      _girosRecarga++;
+    });
+    await Future.wait([_cargarCategorias(), _cargarFeed()]);
+    if (mounted) setState(() => _recargando = false);
+  }
 
   @override
   void initState() {
@@ -100,10 +115,7 @@ class _FeedScreenState extends State<FeedScreen> {
     });
 
     try {
-      const baseUrl = String.fromEnvironment(
-        'API_BASE_URL',
-        defaultValue: 'http://127.0.0.1:3000',
-      );
+      final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
       final respuesta = await http
           .get(Uri.parse('$baseUrl/categorias'))
@@ -151,21 +163,39 @@ class _FeedScreenState extends State<FeedScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leadingWidth: 58,
+        leading: const DragonBannerWidget(),
         title: const Text('Feed Principal de Publicaciones'),
         centerTitle: true,
         elevation: 1,
 
         // ===== BOTÓN DE PERFIL AGREGADO =====
         actions: [
-          IconButton(
+          BotonBannerAdaptativo(
+            tooltip: 'Recargar',
+            onPressed: _recargando ? null : _recargar,
+            icon: AnimatedRotation(
+              turns: _girosRecarga.toDouble(),
+              duration: const Duration(milliseconds: 520),
+              curve: Curves.easeOutCubic,
+              child: const Icon(Icons.refresh),
+            ),
+          ),
+          BotonBannerAdaptativo(
+            escalaPop: 1.32,
+            tooltip: 'Mi perfil',
             icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Future<void>.delayed(const Duration(milliseconds: 140));
+              if (!context.mounted) return;
+              await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const VerPerfilView()),
+                rutaZoomPerfil(const VerPerfilView()),
               );
+              if (mounted) await _cargarFeed();
             },
           ),
+          const SizedBox(width: 6),
         ],
 
         // ===================================
@@ -198,7 +228,7 @@ class _FeedScreenState extends State<FeedScreen> {
           ),
           const Divider(height: 1),
           Expanded(
-            child: _cargandoFeed
+            child: _cargandoFeed && !_recargando
                 ? const Center(child: CircularProgressIndicator())
                 : _errorFeed != null
                 ? Center(
@@ -220,30 +250,46 @@ class _FeedScreenState extends State<FeedScreen> {
                 ? const Center(
                     child: Text('No hay publicaciones en esta categoría.'),
                   )
-                : ListView.builder(
-                    itemCount: itemsFiltrados.length,
-                    itemBuilder: (context, index) {
-                      return FeedCard(item: itemsFiltrados[index]);
-                    },
+                : RefreshIndicator(
+                    onRefresh: _recargar,
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: itemsFiltrados.length,
+                      itemBuilder: (context, index) {
+                        return EntradaSuave(
+                          key: ValueKey<String>(itemsFiltrados[index].id),
+                          retrasoMs: (index * 45).clamp(0, 270),
+                          child: FeedCard(item: itemsFiltrados[index]),
+                        );
+                      },
+                    ),
                   ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Theme.of(context).primaryColor,
-        child: const Icon(Icons.add, color: Colors.black),
-        onPressed: () async {
-          final guardado = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(builder: (context) => const CrearEventoView()),
-          );
+      floatingActionButton: ReboteAlPresionar(
+        escalaPresionado: 0.88,
+        escalaPop: 1.24,
+        child: FloatingActionButton(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          tooltip: 'Crear evento',
+          child: const Icon(Icons.add),
+          onPressed: () async {
+            await Future<void>.delayed(const Duration(milliseconds: 160));
+            if (!context.mounted) return;
+            final guardado = await Navigator.push<bool>(
+              context,
+              rutaSuave(const CrearEventoView()),
+            );
 
-          if (!mounted) return;
+            if (!mounted) return;
 
-          if (guardado == true) {
-            await _cargarFeed();
-          }
-        },
+            if (guardado == true) {
+              await _cargarFeed();
+            }
+          },
+        ),
       ),
     );
   }

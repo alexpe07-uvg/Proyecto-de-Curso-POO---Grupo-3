@@ -4,6 +4,7 @@ class CrearLogInModel {
   String confirmPassword;
   String alias;
   String carrera;
+  String? rutaFotoPerfil;
 
   CrearLogInModel({
     this.email = '',
@@ -11,5 +12,6 @@ class CrearLogInModel {
     this.confirmPassword = '',
     this.alias = '',
     this.carrera = '',
+    this.rutaFotoPerfil,
   });
 }
