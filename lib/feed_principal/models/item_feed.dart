@@ -41,6 +41,7 @@ class ItemFeed {
   final String categoria;
   final TipoItem tipo;
   final String autor;
+  final String? autorFotoUrl;
   final DateTime fecha;
   final String? fechaEvento;
   final String? ubicacion;
@@ -71,6 +72,7 @@ class ItemFeed {
     required this.categoria,
     required this.tipo,
     required this.autor,
+    this.autorFotoUrl,
     required this.fecha,
     this.fechaEvento,
     this.ubicacion,
@@ -92,6 +94,8 @@ class ItemFeed {
       categoria: datos['categoria'] as String,
       tipo: datos['tipo'] == 'evento' ? TipoItem.evento : TipoItem.publicacion,
       autor: datos['autor'] as String,
+      autorFotoUrl:
+          datos['autorFotoUrl'] as String? ?? datos['foto_url'] as String?,
       fecha: DateTime.parse(datos['fecha'] as String).toLocal(),
       fechaEvento: datos['fechaEvento'] as String?,
       ubicacion: datos['ubicacion'] as String?,
