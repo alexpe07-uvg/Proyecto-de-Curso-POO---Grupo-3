@@ -3,13 +3,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'crear_log_in/crear_log_in_view.dart';
 import 'theme/app_animations.dart';
 import 'theme/app_theme.dart';
+import 'theme/theme_controller.dart';
 
 Future<void> main() async {
-  // 3. Asegura que Flutter esté inicializado antes de leer archivos
   WidgetsFlutterBinding.ensureInitialized(); 
   
-  // 4. Carga el archivo .env
   await dotenv.load(fileName: ".env"); 
+  await ThemeController.inicializar();
   
   runApp(const MyApp());
 }
@@ -19,17 +19,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'UVG Matches',
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeController.modoTema,
+      builder: (context, modoActual, _) {
+        return MaterialApp(
+          title: 'UVG Matches',
+          debugShowCheckedModeBanner: false,
 
-      // Temas desacoplados
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Cambia automáticamente según la configuración del sistema
+          // Temas desacoplados
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: modoActual,
 
-      // Pantalla inicial
-      home: const SplashScreen(destino: CrearLogInView()),
+          // Pantalla inicial
+          home: const SplashScreen(destino: CrearLogInView()),
+        );
+      },
     );
   }
 }

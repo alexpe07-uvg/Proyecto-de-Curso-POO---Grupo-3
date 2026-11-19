@@ -6,6 +6,7 @@ const cors = require('cors');
 const pool = require('./server.db');
 const { registrarAuth, verificarSesion } = require('./server.auth');
 const { registrarCategorias, registrarContenido } = require('./server.contenido');
+const { registrarInteracciones } = require('./server.interacciones');
 
 const app = express();
 app.use(cors({
@@ -36,6 +37,7 @@ app.use((error, req, res, next) => {
 
 
 registrarContenido(app, pool, verificarSesion);
+registrarInteracciones(app, pool, verificarSesion);
 
 async function iniciar() {
   try {

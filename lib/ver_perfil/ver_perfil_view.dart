@@ -1,6 +1,7 @@
 import '../crear_log_in/crear_log_in_controller.dart';
 import '../crear_log_in/crear_log_in_view.dart';
 import '../theme/app_animations.dart';
+import '../theme/theme_controller.dart';
 import 'package:flutter/material.dart';
 
 import 'crear_perfil_model.dart';
@@ -179,7 +180,22 @@ class _VerPerfilViewState extends State<VerPerfilView> {
           duration: const Duration(milliseconds: 340),
           curve: Curves.easeInCubic,
           child: Scaffold(
-        appBar: AppBar(title: const Text('Mi perfil')),
+        appBar: AppBar(
+          title: const Text('Mi perfil'),
+          actions: [
+            IconButton(
+              tooltip: Theme.of(context).brightness == Brightness.dark
+                  ? 'Cambiar a modo claro'
+                  : 'Cambiar a modo oscuro',
+              icon: Icon(
+                Theme.of(context).brightness == Brightness.dark
+                    ? Icons.light_mode
+                    : Icons.dark_mode,
+              ),
+              onPressed: () => ThemeController.alternarTema(context),
+            ),
+          ],
+        ),
         body: cargando
             ? const Center(child: CircularProgressIndicator())
             : error != null
