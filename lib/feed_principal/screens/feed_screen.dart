@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../ver_perfil/ver_perfil_view.dart';
 import '../../crear_evento/crear_evento_view.dart';
 import '../../theme/app_animations.dart';
+import '../../theme/theme_controller.dart';
 import '../models/item_feed.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/feed_card.dart';
@@ -155,11 +156,20 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<ItemFeed> itemsFiltrados = _categoriaSeleccionada == 'Todos'
-        ? _items
-        : _items
-              .where((item) => item.categoria == _categoriaSeleccionada)
-              .toList();
+    final ahora = DateTime.now();
+    final List<ItemFeed> itemsFiltrados = _items.where((item) {
+      // Ocultar eventos cuya fecha y hora ya hayan transcurrido
+      if (item.tipo == TipoItem.evento &&
+          item.fechaEvento != null &&
+          item.fechaEvento!.isNotEmpty) {
+        final fecha = DateTime.tryParse(item.fechaEvento!);
+        if (fecha != null && fecha.toLocal().isBefore(ahora)) {
+          return false;
+        }
+      }
+      if (_categoriaSeleccionada == 'Todos') return true;
+      return item.categoria == _categoriaSeleccionada;
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -171,6 +181,17 @@ class _FeedScreenState extends State<FeedScreen> {
 
         // ===== BOTÓN DE PERFIL AGREGADO =====
         actions: [
+          BotonBannerAdaptativo(
+            tooltip: Theme.of(context).brightness == Brightness.dark
+                ? 'Cambiar a modo claro'
+                : 'Cambiar a modo oscuro',
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            onPressed: () => ThemeController.alternarTema(context),
+          ),
           BotonBannerAdaptativo(
             tooltip: 'Recargar',
             onPressed: _recargando ? null : _recargar,

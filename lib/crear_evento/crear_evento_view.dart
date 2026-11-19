@@ -70,6 +70,32 @@ class _CrearEventoViewState extends State<CrearEventoView> {
     );
 
     if (hora != null) {
+      final ahora = DateTime.now();
+      if (_fechaSeleccionada != null &&
+          _fechaSeleccionada!.year == ahora.year &&
+          _fechaSeleccionada!.month == ahora.month &&
+          _fechaSeleccionada!.day == ahora.day) {
+        final seleccionada = DateTime(
+          ahora.year,
+          ahora.month,
+          ahora.day,
+          hora.hour,
+          hora.minute,
+        );
+        if (seleccionada.isBefore(ahora)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Atención: La hora seleccionada ya pasó. Elige una hora futura.',
+                ),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      }
       setState(() {
         _horaSeleccionada = hora;
       });
@@ -113,6 +139,19 @@ class _CrearEventoViewState extends State<CrearEventoView> {
       _horaSeleccionada!.hour,
       _horaSeleccionada!.minute,
     );
+
+    if (fechaFinal.isBefore(DateTime.now())) {
+      setState(() => _disparadorError++);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'La fecha y hora del evento deben ser futuras. No puedes crear un evento en el pasado.',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
 
     final nuevoEvento = CrearEventoModel(
       nombre: _nombreCtrl.text.trim(),

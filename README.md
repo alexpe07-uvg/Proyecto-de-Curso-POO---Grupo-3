@@ -26,7 +26,8 @@ Aplicación móvil y web desarrollada en **Flutter** para conectar a la comunida
 - 📰 **Feed Comunitario:** Muro interactivo con publicaciones y eventos recientes del campus.
 - 🏷️ **Filtros por Categoría:** Exploración rápida de eventos según el interés del estudiante.
 - 👉 **Inscripción Inmediata:** Registro y confirmación de asistencia a eventos con un solo toque.
-- 👤 **Módulo de Perfil:** Consulta y edición de datos del usuario, personalización de carrera, alias y carga de fotografía de perfil.
+- 👤 **Módulo de Perfil:** Consulta y edición de datos del usuario, personalización de alias y carga de fotografía de perfil.
+
 
 ---
 
