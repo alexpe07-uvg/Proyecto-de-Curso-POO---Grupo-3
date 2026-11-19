@@ -56,4 +56,6 @@ build/
 !.vscode/settings.json
 !.vscode/launch.json
 .env
+linux/
+macos/
 
