@@ -15,7 +15,7 @@ Aplicación móvil y web desarrollada en **Flutter** para conectar a la comunida
 | **Mario Pellecer** | Desarrollador |
 | **Otto de León** | Desarrollador |
 | **Henry Donis** | Desarrollador |
-| **Santiago Martínez** | Desarrollador |
+| **Santiago Martinez** | Desarrollador |
 
 ---
 
